@@ -38,6 +38,7 @@ import dji.keysdk.FlightControllerKey;
 import dji.keysdk.KeyManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.Simulator;
+import dji.common.flightcontroller.FlightControllerState;
 
 
 /**
@@ -67,6 +68,8 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
     private float throttle;
     private boolean isSimulatorActived = false;
     private FlightController flightController = null;
+
+    private FlightControllerState flightcontrollerState = null;
     private Simulator simulator = null;
 
     public VirtualStickView(Context context) {
@@ -116,6 +119,7 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                 flightController = DJISampleApplication.getAircraftInstance().getFlightController();
             }
         }
+        flightcontrollerState=flightController.getState();
         flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
         flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
@@ -295,12 +299,20 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                 ToastUtils.setResultToToast(flightController.getVerticalControlMode().name());
                 break;
             case R.id.btn_horizontal_coordinate:
-                if (flightController.getRollPitchCoordinateSystem() == FlightCoordinateSystem.BODY) {
-                    flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.GROUND);
-                } else {
-                    flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
+                flightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                    }
+                });
+                if(flightcontrollerState.isLandingConfirmationNeeded()){
+                    flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                        }
+                    });
                 }
-                ToastUtils.setResultToToast(flightController.getRollPitchCoordinateSystem().name());
                 break;
             case R.id.btn_take_off:
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() {

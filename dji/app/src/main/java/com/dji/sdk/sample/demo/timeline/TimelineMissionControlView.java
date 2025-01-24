@@ -3,6 +3,7 @@ package com.dji.sdk.sample.demo.timeline;
 import android.app.Service;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -52,6 +53,7 @@ import dji.sdk.mission.timeline.actions.GimbalAttitudeAction;
 import dji.sdk.mission.timeline.actions.GoHomeAction;
 import dji.sdk.mission.timeline.actions.GoToAction;
 import dji.sdk.mission.timeline.actions.HotpointAction;
+import dji.sdk.mission.timeline.actions.LandAction;
 import dji.sdk.mission.timeline.actions.RecordVideoAction;
 import dji.sdk.mission.timeline.actions.ShootPhotoAction;
 import dji.sdk.mission.timeline.actions.TakeOffAction;
@@ -185,9 +187,7 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
     }
 
     private void addTrigger(Trigger trigger, Triggerable triggerTarget, String additionalComment) {
-
         if (triggerTarget != null) {
-
             initTrigger(trigger);
             List<Trigger> triggers = triggerTarget.getTriggers();
             if (triggers == null) {
@@ -198,23 +198,25 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
             triggerTarget.setTriggers(triggers);
 
             setTimelinePlanToText(triggerTarget.getClass().getSimpleName()
-                                              + " Trigger "
-                                              + triggerTarget.getTriggers().size()
-                                              + ") "
-                                              + trigger.getClass().getSimpleName()
-                                              + additionalComment);
+                    + " Trigger "
+                    + triggerTarget.getTriggers().size()
+                    + ") "
+                    + trigger.getClass().getSimpleName()
+                    + additionalComment);
         }
     }
 
     private void initTimeline() {
-        if (!GeneralUtils.checkGpsCoordinate(homeLatitude, homeLongitude)) {
-            ToastUtils.setResultToToast("No home point!!!");
-            return;
-        }
-
+        Log.d("TimelineMissionControl", "Initializing timeline");
         List<TimelineElement> elements = new ArrayList<>();
 
         missionControl = MissionControl.getInstance();
+        if (missionControl == null) {
+            Log.e("TimelineMissionControl", "MissionControl instance is null");
+            ToastUtils.setResultToToast("MissionControl instance is null");
+            return;
+        }
+
         final TimelineEvent preEvent = null;
         MissionControl.Listener listener = new MissionControl.Listener() {
             @Override
@@ -222,7 +224,7 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
                 updateTimelineStatus(element, event, error);
             }
         };
-
+        try {
         //Step 1: takeoff from the ground
         setTimelinePlanToText("Step 1: takeoff from the ground");
         elements.add(new TakeOffAction());
@@ -235,65 +237,30 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
         gimbalAction.setDelayTime(5000);
         elements.add(gimbalAction);
 
-        //Step 3: Go 10 meters from home point
-        setTimelinePlanToText("Step 3: Go 10 meters from home point");
-        elements.add(new GoToAction(new LocationCoordinate2D(homeLatitude, homeLongitude), 10));
-
-        //Step 4: shoot 3 photos with 2 seconds interval between each
-        setTimelinePlanToText("Step 4: shoot 3 photos with 2 seconds interval between each");
-        elements.add(ShootPhotoAction.newShootIntervalPhotoAction(3,2));
 
         //Step 5: shoot a single photo
         setTimelinePlanToText("Step 5: shoot a single photo");
         elements.add(ShootPhotoAction.newShootSinglePhotoAction());
 
-        //Step 6: start recording video
-        setTimelinePlanToText("Step 6: start recording video");
-        elements.add(RecordVideoAction.newStartRecordVideoAction());
-
-
-        //Step 7: start a waypoint mission while the aircraft is still recording the video
-        setTimelinePlanToText("Step 7: start a waypoint mission while the aircraft is still recording the video");
-        TimelineElement waypointMission = TimelineMission.elementFromWaypointMission(initTestingWaypointMission());
-        elements.add(waypointMission);
-        addWaypointReachedTrigger(waypointMission);
-
-        //Step 8: stop the recording when the waypoint mission is finished
-        setTimelinePlanToText("Step 8: stop the recording when the waypoint mission is finished");
-        elements.add(RecordVideoAction.newStopRecordVideoAction());
-
-        //Step 9: shoot a single photo
-        setTimelinePlanToText("Step 9: shoot a single photo");
-        elements.add(ShootPhotoAction.newShootSinglePhotoAction());
-
-        //Step 10: start a hotpoint mission
-        setTimelinePlanToText("Step 10: start a hotpoint mission to surround 360 degree");
-        HotpointMission hotpointMission = new HotpointMission();
-        hotpointMission.setHotpoint(new LocationCoordinate2D(homeLatitude, homeLongitude));
-        hotpointMission.setAltitude(10);
-        hotpointMission.setRadius(10);
-        hotpointMission.setAngularVelocity(10);
-        HotpointStartPoint startPoint = HotpointStartPoint.NEAREST;
-        hotpointMission.setStartPoint(startPoint);
-        HotpointHeading heading = HotpointHeading.TOWARDS_HOT_POINT;
-        hotpointMission.setHeading(heading);
-        elements.add(new HotpointAction(hotpointMission, 360));
 
         //Step 11: go back home
         setTimelinePlanToText("Step 11: go back home");
-        elements.add(new GoHomeAction());
+        //elements.add(new GoHomeAction());
+        LandAction action = new LandAction();
+        action.setAutoConfirmLandingEnabled(true);
+        elements.add(action);
 
         //Step 12: restore gimbal attitude
         //This last action will delay the timeline to finish after land on ground, which will
         //make sure the AircraftLandedTrigger will be triggered.
-        setTimelinePlanToText("Step 2: set the gimbal pitch -30 angle in 2 seconds");
-        attitude = new Attitude(0, Rotation.NO_ROTATION, Rotation.NO_ROTATION);
-        gimbalAction = new GimbalAttitudeAction(attitude);
-        gimbalAction.setCompletionTime(2);
-        elements.add(gimbalAction);
+      //  setTimelinePlanToText("Step 2: set the gimbal pitch -30 angle in 2 seconds");
+       // attitude = new Attitude(0, Rotation.NO_ROTATION, Rotation.NO_ROTATION);
+       // gimbalAction = new GimbalAttitudeAction(attitude);
+      //  gimbalAction.setCompletionTime(2);
+      //  elements.add(gimbalAction);
 
-        addAircraftLandedTrigger(missionControl);
-        addBatteryPowerLevelTrigger(missionControl);
+        //addAircraftLandedTrigger(missionControl);
+        //addBatteryPowerLevelTrigger(missionControl);
 
         if (missionControl.scheduledCount() > 0) {
             missionControl.unscheduleEverything();
@@ -302,6 +269,10 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
 
         missionControl.scheduleElements(elements);
         missionControl.addListener(listener);
+    } catch (Exception e) {
+        Log.e("TimelineMissionControl", "Error initializing timeline", e);
+        ToastUtils.setResultToToast("Error initializing timeline: " + e.getMessage());
+    }
     }
 
     private void updateTimelineStatus(@Nullable TimelineElement element, TimelineEvent event, DJIError error) {
@@ -484,11 +455,11 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
             }
             return;
         }
-
+/*
         if (!GeneralUtils.checkGpsCoordinate(homeLatitude, homeLongitude)) {
             ToastUtils.setResultToToast("Home coordinates not yet set...");
             return;
-        }
+        }*/
 
         switch (v.getId()) {
             case R.id.btn_timeline_init:
