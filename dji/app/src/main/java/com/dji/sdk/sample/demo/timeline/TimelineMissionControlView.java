@@ -27,11 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import dji.common.error.DJIError;
-import dji.common.gimbal.Attitude;
-import dji.common.gimbal.Rotation;
-import dji.common.mission.hotpoint.HotpointHeading;
-import dji.common.mission.hotpoint.HotpointMission;
-import dji.common.mission.hotpoint.HotpointStartPoint;
+import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
 import dji.common.mission.waypoint.WaypointActionType;
@@ -49,12 +45,8 @@ import dji.sdk.mission.Triggerable;
 import dji.sdk.mission.timeline.TimelineElement;
 import dji.sdk.mission.timeline.TimelineEvent;
 import dji.sdk.mission.timeline.TimelineMission;
-import dji.sdk.mission.timeline.actions.GimbalAttitudeAction;
-import dji.sdk.mission.timeline.actions.GoHomeAction;
-import dji.sdk.mission.timeline.actions.GoToAction;
-import dji.sdk.mission.timeline.actions.HotpointAction;
+import dji.sdk.mission.timeline.actions.AircraftYawAction;
 import dji.sdk.mission.timeline.actions.LandAction;
-import dji.sdk.mission.timeline.actions.RecordVideoAction;
 import dji.sdk.mission.timeline.actions.ShootPhotoAction;
 import dji.sdk.mission.timeline.actions.TakeOffAction;
 import dji.sdk.mission.timeline.triggers.AircraftLandedTrigger;
@@ -63,6 +55,11 @@ import dji.sdk.mission.timeline.triggers.Trigger;
 import dji.sdk.mission.timeline.triggers.TriggerEvent;
 import dji.sdk.mission.timeline.triggers.WaypointReachedTrigger;
 import dji.sdk.products.Aircraft;
+
+import java.io.FileReader;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 /**
  * Class for Timeline MissionControl.
@@ -74,6 +71,7 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
     private TimelineEvent preEvent;
     private TimelineElement preElement;
     private DJIError preError;
+    private ZeroKeyWaypoint zeroKey;
 
     protected Button getHomeBtn;
     protected Button prepareBtn;
@@ -207,10 +205,18 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
     }
 
     private void initTimeline() {
+        //TODO: Set home coordinates
+        //TODO: Add real path to waypoints.json
+        //TODO: Add real QR code detection
+        //TODO: Add realtime position adjustment
+
         Log.d("TimelineMissionControl", "Initializing timeline");
         List<TimelineElement> elements = new ArrayList<>();
 
         missionControl = MissionControl.getInstance();
+        zeroKey = new ZeroKeyWaypoint();
+        loadWaypointsFromJson("path/to/your/waypoints.json");
+
         if (missionControl == null) {
             Log.e("TimelineMissionControl", "MissionControl instance is null");
             ToastUtils.setResultToToast("MissionControl instance is null");
@@ -229,14 +235,20 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
         setTimelinePlanToText("Step 1: takeoff from the ground");
         elements.add(new TakeOffAction());
 
-        //Step 2: wait for 5 seconds and then reset the gimbal to horizontal angle in 2 seconds.
-        setTimelinePlanToText("Step 2: wait for 5 seconds and then set the gimbal pitch -30 angle in 2 seconds");
-        Attitude attitude = new Attitude(-30, Rotation.NO_ROTATION, Rotation.NO_ROTATION);
-        GimbalAttitudeAction gimbalAction = new GimbalAttitudeAction(attitude);
-        gimbalAction.setCompletionTime(2);
-        gimbalAction.setDelayTime(5000);
-        elements.add(gimbalAction);
 
+        zeroKey.nextWaypoint();
+        //Step 2: Yaw to waypoint
+        setTimelinePlanToText("Step 2: Yaw to waypoint");
+        elements.add(new AircraftYawAction((float) zeroKey.getAngle(),20));//Angular velocity default 20
+
+
+        //Step 3: Go to waypoint
+        setTimelinePlanToText("Step 3: Go to waypoint");
+        pauseTimeline();
+
+
+        //Step 4: Find QR code
+        setTimelinePlanToText("Step 4: Find QR code");
 
         //Step 5: shoot a single photo
         setTimelinePlanToText("Step 5: shoot a single photo");
@@ -273,6 +285,28 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
         Log.e("TimelineMissionControl", "Error initializing timeline", e);
         ToastUtils.setResultToToast("Error initializing timeline: " + e.getMessage());
     }
+    }
+    private void loadWaypointsFromJson(String filePath) {
+        try (FileReader reader = new FileReader(filePath)) {
+            StringBuilder content = new StringBuilder();
+            int i;
+            while ((i = reader.read()) != -1) {
+                content.append((char) i);
+            }
+            JSONTokener tokener = new JSONTokener(content.toString());
+            JSONArray waypointsArray = new JSONArray(tokener);
+
+            for (int j = 0; j < waypointsArray.length(); j++) {
+                JSONObject waypoint = waypointsArray.getJSONObject(j);
+                int[] pos = new int[3];
+                pos[0] = waypoint.getInt("x");
+                pos[1] = waypoint.getInt("y");
+                pos[2] = waypoint.getInt("z");
+                zeroKey.setWaypoint(pos);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void updateTimelineStatus(@Nullable TimelineElement element, TimelineEvent event, DJIError error) {
