@@ -37,7 +37,7 @@ public class ZeroKeyWaypoint {
     private final float waypointAccuracy = 0.1f;//meters
     private final float heightThrottle=0.2f; //m/s
     private final float pitchVelocity=0.2f; //m/s
-    private final float yawVelocity=0.2f; //m/s
+    private final float yawVelocity=10f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
     private File logFile;
 
@@ -58,6 +58,7 @@ public class ZeroKeyWaypoint {
             flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
             loadWaypointsFromCSV("waypoints.csv");
             setWaypoint(new int[]{0, 0, 0}); // Add temp waypoint as first
+            nextWaypoint();
         } catch (Exception e) {
             logToFile("Error initializing ZeroKeyWaypoint" + e.getMessage());
             Log.e(TAG, "Error initializing ZeroKeyWaypoint", e);
@@ -82,8 +83,8 @@ public class ZeroKeyWaypoint {
         if (waypoints.size() > 1) {
             waypoint_pos = waypoints.remove(0);
             waypoint_pos = waypoints.get(0);
-            //current_angle = zeroKey.getAngle() //TODO: Set current angle to zeroKey angle
             logToFile("Next waypoint set: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
+            ToastUtils.setResultToToast("Next waypoint set: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
             return true;
         }
         else{
@@ -91,25 +92,26 @@ public class ZeroKeyWaypoint {
             return false;
         }
     }
-
+    public void setCurrentPos(int[] current_pos) { //TODO: Remove this
+        this.current_pos = current_pos;
+    }
     public void setWaypoint(int[] waypoint_pos) {
         waypoints.add(waypoint_pos);
     }
     public float[] goToWaypoint(){
         try {
             ToastUtils.setResultToToast("Going to waypoint");
+            //current_angle = zeroKey.getAngle() //TODO: Set current angle to zeroKey angle
+            //current_pos = zeroKey.getPos();//TODO: Set current position to zeroKey position
             //logToFile("goToWaypoint called");
             //int[] distance = calculateDistance(current_pos, waypoint_pos);
             //logToFile("calculateDistance called");
             //int height = calculateHeight(current_pos, waypoint_pos);
-            logToFile("calculateHeight called");
             yaw = yawToWaypoint();//Yaw movement TODO: This might need to run in a loop before the other movements
-            logToFile("yaw called");
-            throttle = 1.0f;
-            pitch = 1.0f;
+            throttle = 0f;
+            pitch = 0f;
             //throttle = throttleToWaypoint(height);//Vertical movement
             //pitch = pitchToWaypoint(distance);//Forward movement
-            //current_pos=zeroKey.getPos();//TODO: Add this
             //yawToBox();
             return new float[]{pitch, throttle, yaw};
 
@@ -128,8 +130,12 @@ public class ZeroKeyWaypoint {
             logToFile("Yaw to waypoint: Already at angle");
             return 0f;
         }
-        else{//Yaw to waypoint//TODO: Add left and right yaw
-            return yawVelocity;
+        else{//Yaw to waypoint//TODO: Check if this is correct
+            if (angleToWaypoint > current_angle) {
+                return yawVelocity; // Yaw right
+            } else {
+                return -yawVelocity; // Yaw left
+            }
         }
     }
 
@@ -171,11 +177,8 @@ public class ZeroKeyWaypoint {
     }
 
     private int[] calculateDistance(int[] current_pos, int[] waypoint_pos) {
-        logToFile("calculateDistance called");
         int [] distance = new int[2];
         for (int i = 0; i < 1; i++) {
-            logToFile("calculateDistance: waypoint:" + waypoint_pos[i]);
-            logToFile("calculateDistance: current_pos:" + current_pos[i]);
             distance[i] = waypoint_pos[i] - current_pos[i];
 
         }
@@ -211,7 +214,7 @@ public class ZeroKeyWaypoint {
             setWaypoint(pos);
         }
     }
-    private void logToFile(String message) {
+    public void logToFile(String message) {
         try (FileOutputStream fos = new FileOutputStream(logFile, true)) {
             fos.write((message + "\n").getBytes());
         } catch (IOException e) {

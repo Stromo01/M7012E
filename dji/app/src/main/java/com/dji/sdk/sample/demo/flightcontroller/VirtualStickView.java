@@ -2,6 +2,8 @@ package com.dji.sdk.sample.demo.flightcontroller;
 
 import android.app.Service;
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -95,7 +97,7 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
 
     @Override
     protected void onDetachedFromWindow() {
-        if (null != sendVirtualStickDataTimer) {
+        if (null != sendVirtualStickDataTimer) {//TODO: Fix this
             if (sendVirtualStickDataTask != null) {
                 sendVirtualStickDataTask.cancel();
 
@@ -295,12 +297,8 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                 ToastUtils.setResultToToast(flightController.getYawControlMode().name());
                 break;
             case R.id.btn_vertical_control_mode:
-                if (flightController.getVerticalControlMode() == VerticalControlMode.VELOCITY) {
-                    flightController.setVerticalControlMode(VerticalControlMode.POSITION);
-                } else {
-                    flightController.setVerticalControlMode(VerticalControlMode.VELOCITY);
-                }
-                ToastUtils.setResultToToast(flightController.getVerticalControlMode().name());
+                zeroKey.setCurrentPos(zeroKey.getWaypoints().get(0));
+                zeroKey.nextWaypoint();
                 break;
             case R.id.btn_horizontal_coordinate:
                 flightController.startLanding(new CommonCallbacks.CompletionCallback() {
@@ -319,31 +317,104 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                 }
                 break;
             case R.id.btn_take_off:
-                sendVirtualStickDataTimer = new Timer();
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         DialogUtils.showDialogBasedOnError(getContext(), djiError);
                     }
                 });
+                flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        flightController.setVirtualStickAdvancedModeEnabled(true);
+                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                    }
+                });
+                pitch=0f;
+                throttle=0f;
+                yaw=0f;
+                if (null == sendVirtualStickDataTimer) {
+                    sendVirtualStickDataTask = new SendVirtualStickDataTask();
+                    sendVirtualStickDataTimer = new Timer();
+
+                }
+                try {
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    Runnable updateValuesRunnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!zeroKey.haveArrived()) {
+                                float[] values = zeroKey.goToWaypoint();
+                                if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
+
+                                    pitch = values[0];
+                                    throttle = values[1];
+                                    yaw = values[2];
+                                    ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
+                                    if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
+                                        try {
+                                            sendVirtualStickDataTask.cancel();
+                                            sendVirtualStickDataTask = new SendVirtualStickDataTask();
+                                            sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
+                                        } catch (IllegalStateException e) {
+                                            ToastUtils.setResultToToast("Error scheduling task: " + e.getMessage());
+                                            zeroKey.logToFile("Error scheduling task: " + e.getMessage());
+                                        }
+                                    }
+                                }
+                                handler.postDelayed(this, 200); // Update values again after 200ms
+                            } else {
+                                zeroKey.logToFile("Land");
+                                if (!zeroKey.nextWaypoint()) {
+                                    flightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                                        @Override
+                                        public void onResult(DJIError djiError) {
+                                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                                        }
+                                    });
+                                    if (flightcontrollerState.isLandingConfirmationNeeded()) {
+                                        flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
+                                            @Override
+                                            public void onResult(DJIError djiError) {
+                                                DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    handler.postDelayed(this, 200); // Check next waypoint after 200ms
+                                }
+                            }
+                        }
+                    };
+                    handler.post(updateValuesRunnable);
+                }catch (Exception e){
+                    ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
+                    zeroKey.logToFile("Error in takeoff: " + e.getMessage());
+                }
+                /*
                 for (int i = 0; i <zeroKey.getWaypoints().size()-1; i++) {
                     ToastUtils.setResultToToast("Waypoint: " + i);
                     try{
                     while(true){//!zeroKey.haveArrived()){
                         float[] values = zeroKey.goToWaypoint();
                         ToastUtils.setResultToToast("done with goToWaypoint");
-                        pitch = values[0];
-                        throttle = values[1];
-                        yaw = values[2];
-                        ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
-                        sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
+                        if (values[0] != pitch || values[1] != throttle || values[2] != yaw){
+                            pitch = values[0];
+                            throttle = values[1];
+                            yaw =values[2];
+                            ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
+                            sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
+                        }
+
                     }
+                    //Drone has arrived at waypoint
+                    //TODO: Add camera functions here
                     }
                     catch (Exception e){
                         ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
                     }
-                    //TODO: Add camera functions
-                }/*
+
+                }
                 flightController.startLanding(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
