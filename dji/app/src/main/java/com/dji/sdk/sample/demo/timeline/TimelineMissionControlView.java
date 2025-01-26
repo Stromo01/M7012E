@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.dji.sdk.sample.R;
+import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.GeneralUtils;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
@@ -27,7 +28,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import dji.common.error.DJIError;
-import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.mission.waypoint.Waypoint;
 import dji.common.mission.waypoint.WaypointAction;
 import dji.common.mission.waypoint.WaypointActionType;
@@ -45,7 +45,6 @@ import dji.sdk.mission.Triggerable;
 import dji.sdk.mission.timeline.TimelineElement;
 import dji.sdk.mission.timeline.TimelineEvent;
 import dji.sdk.mission.timeline.TimelineMission;
-import dji.sdk.mission.timeline.actions.AircraftYawAction;
 import dji.sdk.mission.timeline.actions.LandAction;
 import dji.sdk.mission.timeline.actions.ShootPhotoAction;
 import dji.sdk.mission.timeline.actions.TakeOffAction;
@@ -214,8 +213,8 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
         List<TimelineElement> elements = new ArrayList<>();
 
         missionControl = MissionControl.getInstance();
-        zeroKey = new ZeroKeyWaypoint();
-        loadWaypointsFromJson("path/to/your/waypoints.json");
+        zeroKey = new ZeroKeyWaypoint(getContext());
+       // loadWaypointsFromJson("path/to/your/waypoints.json");
 
         if (missionControl == null) {
             Log.e("TimelineMissionControl", "MissionControl instance is null");
@@ -236,10 +235,10 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
         elements.add(new TakeOffAction());
 
 
-        zeroKey.nextWaypoint();
+        //zeroKey.nextWaypoint();
         //Step 2: Yaw to waypoint
         setTimelinePlanToText("Step 2: Yaw to waypoint");
-        elements.add(new AircraftYawAction((float) zeroKey.getAngle(),20));//Angular velocity default 20
+       // elements.add(new AircraftYawAction((float) zeroKey.getAngle(),20));//Angular velocity default 20
 
 
         //Step 3: Go to waypoint
@@ -302,7 +301,7 @@ public class TimelineMissionControlView extends LinearLayout implements OnClickL
                 pos[0] = waypoint.getInt("x");
                 pos[1] = waypoint.getInt("y");
                 pos[2] = waypoint.getInt("z");
-                zeroKey.setWaypoint(pos);
+                //zeroKey.setWaypoint(pos);
             }
         } catch (Exception e) {
             e.printStackTrace();

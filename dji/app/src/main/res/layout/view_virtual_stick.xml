@@ -83,13 +83,13 @@
     <Button
         android:id="@+id/btn_take_off"
 
+        style="@style/common_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Take Off"
-        style="@style/common_button"
         android:layout_below="@+id/btn_vertical_control_mode"
         android:layout_alignLeft="@+id/btn_vertical_control_mode"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="10dp"
+        android:text="Go to waypoints" />
 
     <com.dji.sdk.sample.internal.utils.OnScreenJoystick
         android:id="@+id/directionJoystickRight"

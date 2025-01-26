@@ -21,6 +21,8 @@ import com.dji.sdk.sample.internal.utils.OnScreenJoystick;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.view.PresentableView;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -71,6 +73,8 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
 
     private FlightControllerState flightcontrollerState = null;
     private Simulator simulator = null;
+
+    private ZeroKeyWaypoint zeroKey;
 
     public VirtualStickView(Context context) {
         super(context);
@@ -124,12 +128,12 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
         flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
         flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
         flightController.setRollPitchCoordinateSystem(FlightCoordinateSystem.BODY);
-
         // Check if the simulator is activated.
         if (simulator == null) {
             simulator = ModuleVerificationUtil.getSimulator();
         }
         isSimulatorActived = simulator.isSimulatorActive();
+        zeroKey = new ZeroKeyWaypoint(getContext());
 
     }
 
@@ -315,16 +319,50 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                 }
                 break;
             case R.id.btn_take_off:
+                sendVirtualStickDataTimer = new Timer();
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
                         DialogUtils.showDialogBasedOnError(getContext(), djiError);
                     }
                 });
+                for (int i = 0; i <zeroKey.getWaypoints().size()-1; i++) {
+                    ToastUtils.setResultToToast("Waypoint: " + i);
+                    try{
+                    while(true){//!zeroKey.haveArrived()){
+                        float[] values = zeroKey.goToWaypoint();
+                        ToastUtils.setResultToToast("done with goToWaypoint");
+                        pitch = values[0];
+                        throttle = values[1];
+                        yaw = values[2];
+                        ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
+                        sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
+                    }
+                    }
+                    catch (Exception e){
+                        ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
+                    }
+                    //TODO: Add camera functions
+                }/*
+                flightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                    }
+                });
+                if(flightcontrollerState.isLandingConfirmationNeeded()){
+                    flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                        }
+                    });
+                }*/
                 break;
             default:
                 break;
         }
+
     }
 
     @Override
@@ -382,4 +420,6 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
             }
         }
     }
+
+
 }
