@@ -289,12 +289,7 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                 ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
                 break;
             case R.id.btn_yaw_control_mode:
-                if (flightController.getYawControlMode() == YawControlMode.ANGULAR_VELOCITY) {
-                    flightController.setYawControlMode(YawControlMode.ANGLE);
-                } else {
-                    flightController.setYawControlMode(YawControlMode.ANGULAR_VELOCITY);
-                }
-                ToastUtils.setResultToToast(flightController.getYawControlMode().name());
+
                 break;
             case R.id.btn_vertical_control_mode:
                 zeroKey.setCurrentPos(zeroKey.getWaypoints().get(0));
@@ -381,7 +376,7 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                                         });
                                     }
                                 } else {
-                                    handler.postDelayed(this, 200); // Check next waypoint after 200ms
+                                    handler.postDelayed(this, 200); // Check next waypoint after 200ms //TODO: Is this correct?
                                 }
                             }
                         }

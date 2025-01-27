@@ -10,6 +10,8 @@ import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.camera.Camera;
+import dji.sdk.media.FetchMediaTask;
+import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaManager;
 
@@ -46,6 +48,7 @@ public class CameraScaner {
                         List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
                         if (mediaFiles != null && !mediaFiles.isEmpty()) {
                             MediaFile latestMediaFile = mediaFiles.get(0);
+
                             latestMediaFile.fetchThumbnail(new MediaFile.FetchMediaFileTask.Callback() {
                                 @Override
                                 public void onUpdate(MediaFile.FetchMediaFileTask fetchMediaFileTask, MediaFile.FetchMediaFileTask.Status status) {

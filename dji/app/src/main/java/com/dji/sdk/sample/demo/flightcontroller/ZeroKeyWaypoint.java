@@ -14,6 +14,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.util.CommonCallbacks;
@@ -35,9 +37,9 @@ public class ZeroKeyWaypoint {
     private float throttle;
 
     private final float waypointAccuracy = 0.1f;//meters
-    private final float heightThrottle=0.2f; //m/s
-    private final float pitchVelocity=0.2f; //m/s
-    private final float yawVelocity=10f; //degress/s
+    private final float heightThrottle=1f; //m/s
+    private final float pitchVelocity=1f; //m/s
+    private final float yawVelocity=90f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
     private File logFile;
 
@@ -56,7 +58,9 @@ public class ZeroKeyWaypoint {
             flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
             flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
             flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
-            loadWaypointsFromCSV("waypoints.csv");
+            String path = "app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/waypoints.csv";
+            File waypointsFile = new File(context.getFilesDir(), "waypoints.csv");
+            loadWaypointsFromCSV(waypointsFile.getAbsolutePath());
             setWaypoint(new int[]{0, 0, 0}); // Add temp waypoint as first
             nextWaypoint();
         } catch (Exception e) {
@@ -103,15 +107,11 @@ public class ZeroKeyWaypoint {
             ToastUtils.setResultToToast("Going to waypoint");
             //current_angle = zeroKey.getAngle() //TODO: Set current angle to zeroKey angle
             //current_pos = zeroKey.getPos();//TODO: Set current position to zeroKey position
-            //logToFile("goToWaypoint called");
-            //int[] distance = calculateDistance(current_pos, waypoint_pos);
-            //logToFile("calculateDistance called");
-            //int height = calculateHeight(current_pos, waypoint_pos);
+            int[] distance = calculateDistance(current_pos, waypoint_pos);
+            int height = calculateHeight(current_pos, waypoint_pos);
             yaw = yawToWaypoint();//Yaw movement TODO: This might need to run in a loop before the other movements
-            throttle = 0f;
-            pitch = 0f;
-            //throttle = throttleToWaypoint(height);//Vertical movement
-            //pitch = pitchToWaypoint(distance);//Forward movement
+            throttle = throttleToWaypoint(height);//Vertical movement
+            pitch = pitchToWaypoint(distance);//Forward movement
             //yawToBox();
             return new float[]{pitch, throttle, yaw};
 
@@ -156,7 +156,7 @@ public class ZeroKeyWaypoint {
     }
 
     private float pitchToWaypoint(int[] distance){
-        if(distance[0]>waypointAccuracy && distance[1]>waypointAccuracy){//If is not in the waypoint area
+        if(distance[0]>waypointAccuracy || distance[1]>waypointAccuracy){//If is not in the waypoint area
             return pitchVelocity;
         }
         else{
@@ -191,6 +191,13 @@ public class ZeroKeyWaypoint {
     private void loadWaypointsFromCSV(String filePath) {
         /* //TODO: THIS DOESNT WORK
         logToFile("loadWaypointsFromCSV called");
+        File file = new File(filePath);
+        if (!file.exists()) {
+            logToFile("File does not exist: " + file.getAbsolutePath());
+            File files = new File(".");
+            logToFile("list: " + Arrays.toString(files.list()));
+            return;
+        }
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             logToFile("Reading waypoints from file");
@@ -204,15 +211,13 @@ public class ZeroKeyWaypoint {
                 setWaypoint(pos);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logToFile("Error reading waypoints from file: " + e.getMessage());
         }*/
-        for (int i = 0; i < 3; i++){
-            int[] pos = new int[3];
-            pos[0] = i*10;
-            pos[1] = i*10;
-            pos[2] = i*10;
-            setWaypoint(pos);
-        }
+        setWaypoint(new int[]{0, 10, 0});
+        setWaypoint(new int[]{100, 100, 0});
+        setWaypoint(new int[]{10, 10, 0});
+        setWaypoint(new int[]{100, 100, 0});
+
     }
     public void logToFile(String message) {
         try (FileOutputStream fos = new FileOutputStream(logFile, true)) {
