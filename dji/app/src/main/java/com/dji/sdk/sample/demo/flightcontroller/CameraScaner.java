@@ -53,12 +53,14 @@ public class CameraScaner {
                                         Bitmap bitmap = BitmapFactory.decodeByteArray(fetchMediaFileTask.getData(), 0, fetchMediaFileTask.getData().length);
                                         String qrCodeText = decodeQRCode(bitmap);
                                         // Handle the QR code text
+                                        return qrCodeText;
                                     }
                                 }
                             });
                         }
                     } else {
                         // Handle error
+                        return null;
                     }
                 }
             });
@@ -77,6 +79,7 @@ public class CameraScaner {
             return result.getText();
         } catch (Exception e) {
             // Handle exception
+            return "error when decoding QR code";
         }
         return null;
     }
