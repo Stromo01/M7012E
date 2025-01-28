@@ -1,3 +1,5 @@
+package com.dji.sdk.sample.demo.flightcontroller;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -10,36 +12,36 @@ import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.camera.Camera;
-import dji.sdk.media.FetchMediaTask;
-import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaManager;
 
 import java.util.List;
 
-public class CameraScaner {
+public class CameraScanner {
 
     private Camera camera;
     private MediaManager mediaManager;
 
-    public CameraScaner() {
+    public CameraScanner() {
+        initializeCamera();
+    }
+
+    private void initializeCamera() {
         camera = DJISampleApplication.getProductInstance().getCamera();
         if (camera != null) {
             camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        // Camera mode set successfully
-                    } else {
+                    if (djiError != null) {
                         // Handle error
                     }
                 }
             });
+            mediaManager = camera.getMediaManager();
         }
-        mediaManager = camera.getMediaManager();
     }
 
-    public String scanQRCode() {
+    public void scanQRCode(final QRCodeScanCallback callback) {
         if (mediaManager != null) {
             mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
                 @Override
@@ -48,27 +50,33 @@ public class CameraScaner {
                         List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
                         if (mediaFiles != null && !mediaFiles.isEmpty()) {
                             MediaFile latestMediaFile = mediaFiles.get(0);
-
-                            latestMediaFile.fetchThumbnail(new MediaFile.FetchMediaFileTask.Callback() {
-                                @Override
-                                public void onUpdate(MediaFile.FetchMediaFileTask fetchMediaFileTask, MediaFile.FetchMediaFileTask.Status status) {
-                                    if (status == MediaFile.FetchMediaFileTask.Status.SUCCESS) {
-                                        Bitmap bitmap = BitmapFactory.decodeByteArray(fetchMediaFileTask.getData(), 0, fetchMediaFileTask.getData().length);
-                                        String qrCodeText = decodeQRCode(bitmap);
-                                        // Handle the QR code text
-                                        return qrCodeText;
-                                    }
-                                }
-                            });
+                            fetchThumbnailAndDecode(latestMediaFile, callback);
+                        } else {
+                            callback.onQRCodeScanResult(null);
                         }
                     } else {
-                        // Handle error
-                        return null;
+                        callback.onQRCodeScanResult(null);
                     }
                 }
             });
+        } else {
+            callback.onQRCodeScanResult(null);
         }
-        return null;
+    }
+
+    private void fetchThumbnailAndDecode(final MediaFile mediaFile, final QRCodeScanCallback callback) {
+        mediaFile.fetchPreview(new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (djiError == null) {
+                    Bitmap bitmap = mediaFile.getPreview();
+                    String result = decodeQRCode(bitmap);
+                    callback.onQRCodeScanResult(result);
+                } else {
+                    callback.onQRCodeScanResult(null);
+                }
+            }
+        });
     }
 
     private String decodeQRCode(Bitmap bitmap) {
@@ -82,8 +90,11 @@ public class CameraScaner {
             return result.getText();
         } catch (Exception e) {
             // Handle exception
-            return "error when decoding QR code";
+            return null;
         }
-        return null;
+    }
+
+    public interface QRCodeScanCallback {
+        void onQRCodeScanResult(String result);
     }
 }
