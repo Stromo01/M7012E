@@ -88,7 +88,8 @@ dependencies {
         //exclude module: 'fly-safe-database'
     })
     compileOnly 'com.dji:dji-sdk-provided:4.18'
-
+    implementation 'com.google.zxing:core:3.4.1'
+    implementation 'com.google.zxing:android-core:3.3.0'
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation 'androidx.core:core:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'

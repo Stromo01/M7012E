@@ -338,47 +338,68 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                     Runnable updateValuesRunnable = new Runnable() {
                         @Override
                         public void run() {
-                            if (!zeroKey.haveArrived()) {
-                                float[] values = zeroKey.goToWaypoint();
-                                if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
+                            handleWaypointNavigation();
+                        }
 
-                                    pitch = values[0];
-                                    throttle = values[1];
-                                    yaw = values[2];
-                                    ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
-                                    if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
-                                        try {
-                                            sendVirtualStickDataTask.cancel();
-                                            sendVirtualStickDataTask = new SendVirtualStickDataTask();
-                                            sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
-                                        } catch (IllegalStateException e) {
-                                            ToastUtils.setResultToToast("Error scheduling task: " + e.getMessage());
-                                            zeroKey.logToFile("Error scheduling task: " + e.getMessage());
-                                        }
+                        private void handleWaypointNavigation() {
+                            if (zeroKey.getWaypoints().isEmpty()) {//No more waypoints, land
+                                handleLanding();
+                            }
+                            else if (!zeroKey.haveArrived()) {//Not at waypoint, go to waypoint
+                                float[] values = zeroKey.goToWaypoint();
+                                updateFlightControlData(values);
+                                scheduleNextRun();
+                            } else if (!zeroKey.isLookingAtBox()) {//At waypoint, but not looking at box, yaw to box
+                                handleYawToBox();
+                            }
+                            else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
+                                //TODO: Camera controls and qr code scanning
+                                zeroKey.nextWaypoint();
+                            }
+                        }
+
+                        private void handleYawToBox() {
+                            yaw = zeroKey.yawToBox();
+                            pitch = 0f;
+                            throttle = 0f;
+                            updateFlightControlData(new float[]{pitch, throttle, yaw});
+                            scheduleNextRun();
+                        }
+
+                        private void handleLanding() {
+                            zeroKey.logToFile("Land");
+                            flightController.startLanding(djiError -> DialogUtils.showDialogBasedOnError(getContext(), djiError));
+                            if (flightcontrollerState.isLandingConfirmationNeeded()) {
+                                flightController.confirmLanding(djiError -> DialogUtils.showDialogBasedOnError(getContext(), djiError));
+                            }
+                        }
+
+                        private void updateFlightControlData(float[] values) {
+                            if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
+                                pitch = values[0];
+                                throttle = values[1];
+                                yaw = values[2];
+                                ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
+                                if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
+                                    try {
+                                        sendVirtualStickDataTask.cancel();
+                                        sendVirtualStickDataTask = new SendVirtualStickDataTask();
+                                        sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
+                                    } catch (IllegalStateException e) {
+                                        ToastUtils.setResultToToast("Error scheduling task: " + e.getMessage());
+                                        zeroKey.logToFile("Error scheduling task: " + e.getMessage());
                                     }
-                                }
-                                handler.postDelayed(this, 200); // Update values again after 200ms
-                            } else {
-                                zeroKey.logToFile("Land");
-                                if (!zeroKey.nextWaypoint()) {
-                                    flightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                                        @Override
-                                        public void onResult(DJIError djiError) {
-                                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                                        }
-                                    });
-                                    if (flightcontrollerState.isLandingConfirmationNeeded()) {
-                                        flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
-                                            @Override
-                                            public void onResult(DJIError djiError) {
-                                                DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    handler.postDelayed(this, 200); // Check next waypoint after 200ms //TODO: Is this correct?
                                 }
                             }
+                        }
+                        private void scheduleNextRun() {
+                            Handler handler = new Handler(Looper.getMainLooper());
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    handleWaypointNavigation();
+                                }
+                            }, 200);
                         }
                     };
                     handler.post(updateValuesRunnable);
@@ -386,44 +407,6 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                     ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
                     zeroKey.logToFile("Error in takeoff: " + e.getMessage());
                 }
-                /*
-                for (int i = 0; i <zeroKey.getWaypoints().size()-1; i++) {
-                    ToastUtils.setResultToToast("Waypoint: " + i);
-                    try{
-                    while(true){//!zeroKey.haveArrived()){
-                        float[] values = zeroKey.goToWaypoint();
-                        ToastUtils.setResultToToast("done with goToWaypoint");
-                        if (values[0] != pitch || values[1] != throttle || values[2] != yaw){
-                            pitch = values[0];
-                            throttle = values[1];
-                            yaw =values[2];
-                            ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
-                            sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
-                        }
-
-                    }
-                    //Drone has arrived at waypoint
-                    //TODO: Add camera functions here
-                    }
-                    catch (Exception e){
-                        ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
-                    }
-
-                }
-                flightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                    }
-                });
-                if(flightcontrollerState.isLandingConfirmationNeeded()){
-                    flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                        }
-                    });
-                }*/
                 break;
             default:
                 break;

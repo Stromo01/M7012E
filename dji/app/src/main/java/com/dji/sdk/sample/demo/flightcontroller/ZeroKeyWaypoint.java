@@ -36,6 +36,8 @@ public class ZeroKeyWaypoint {
     private float pitch;
     private float throttle;
 
+    private boolean isLookingAtBox;
+
     private final float waypointAccuracy = 0.1f;//meters
     private final float heightThrottle=1f; //m/s
     private final float pitchVelocity=1f; //m/s
@@ -105,7 +107,7 @@ public class ZeroKeyWaypoint {
     public float[] goToWaypoint(){
         try {
             ToastUtils.setResultToToast("Going to waypoint");
-            //current_angle = zeroKey.getAngle() //TODO: Set current angle to zeroKey angle
+            //current_angle = calculateYawFromQuaternion(zeroKey.getAngle()); //TODO: Set current angle to zeroKey angle
             //current_pos = zeroKey.getPos();//TODO: Set current position to zeroKey position
             int[] distance = calculateDistance(current_pos, waypoint_pos);
             int height = calculateHeight(current_pos, waypoint_pos);
@@ -164,8 +166,21 @@ public class ZeroKeyWaypoint {
         }
     }
 
-    private void yawToBox(){
-        //TODO: Implement yaw to box
+    public float yawToBox(){
+        float angleToBox = 3f;//calculateYawFromQuaternion(zeroKey.getWaypointAngle());//TODO: Implement this
+        isLookingAtBox=false;
+        if (current_angle==angleToBox){//If already at angle
+            logToFile("Yaw to box: Already at angle");
+            isLookingAtBox=true;
+            return 0f;
+        }
+        else{//Yaw to waypoint//TODO: Check if this is correct
+            if (angleToBox > current_angle) {
+                return yawVelocity; // Yaw right
+            } else {
+                return -yawVelocity; // Yaw left
+            }
+        }
     }
 
     private double calculateAngle(int current_angle, int[] waypoint_pos, int[] current_pos) {
@@ -174,6 +189,12 @@ public class ZeroKeyWaypoint {
         double angleInRadians = Math.atan2(deltaY, deltaX);
         double angleInDegrees = Math.toDegrees(angleInRadians);
         return angleInDegrees; //TODO:: Add this to current angle
+    }
+
+    private double calculateYawFromQuaternion(double x, double y, double z, double w) {
+        double t0 = +2.0 * (w * x + y * z);
+        double t1 = +1.0 - 2.0 * (x * x + y * y);
+        return Math.atan2(t0, t1);
     }
 
     private int[] calculateDistance(int[] current_pos, int[] waypoint_pos) {
@@ -228,6 +249,9 @@ public class ZeroKeyWaypoint {
     }
     public ArrayList<int[]> getWaypoints(){
         return waypoints;
+    }
+    public boolean isLookingAtBox(){
+        return isLookingAtBox;
     }
 
 
