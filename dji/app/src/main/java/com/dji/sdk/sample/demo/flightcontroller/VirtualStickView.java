@@ -11,6 +11,7 @@ import android.widget.CompoundButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -22,6 +23,7 @@ import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
 import com.dji.sdk.sample.internal.utils.OnScreenJoystick;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.view.PresentableView;
+import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -81,6 +83,7 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
     public VirtualStickView(Context context) {
         super(context);
         init(context);
+
     }
 
     @NonNull
@@ -116,6 +119,24 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
         layoutInflater.inflate(R.layout.view_virtual_stick, this, true);
         initParams();
         initUI();
+        triggerWebRequest();
+    }
+
+    private void triggerWebRequest() {
+        WebserverRequestHandler.OnRequestCompleteListener listener = resultMap -> {
+            if (resultMap.containsKey("result")) {
+                String response = resultMap.get("result");
+                Log.i("MainActivity", "API Response: " + response);
+                // Update UI with response here, e.g., display in a TextView
+            } else {
+                String error = resultMap.get("error");
+                Log.e("MainActivity", "API Error: " + error);
+                // Handle error, e.g., show a Toast or error dialog
+            }
+        };
+
+        WebserverRequestHandler request = new WebserverRequestHandler(listener);
+        request.execute(); // Uses default MOCK_BASE_URL
     }
 
     private void initParams() {
