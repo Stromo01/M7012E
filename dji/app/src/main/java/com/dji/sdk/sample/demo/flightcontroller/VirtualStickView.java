@@ -50,7 +50,7 @@ import dji.common.flightcontroller.FlightControllerState;
 /**
  * Class for virtual stick.
  */
-public class VirtualStickView extends RelativeLayout implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, PresentableView {
+public class VirtualStickView extends RelativeLayout implements CameraScanner.QRCodeScanCallback, View.OnClickListener, CompoundButton.OnCheckedChangeListener, PresentableView {
     private Button btnEnableVirtualStick;
     private Button btnDisableVirtualStick;
     private Button btnHorizontalCoordinate;
@@ -332,7 +332,7 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                     });
                 }
                 break;
-            case R.id.btn_take_off:
+            case R.id.btn_take_off: //Start waypoint navigation
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -375,6 +375,9 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                             }
                             else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
                                 //TODO: Camera controls and qr code scanning
+                                //TODO: Take picture, scan QR code, return result here
+                                String result="Result here";
+                                zeroKey.logToFile("Qrcode result: " + result);
                                 zeroKey.nextWaypoint();
                             }
                         }
@@ -474,6 +477,10 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
         return R.string.flight_controller_listview_virtual_stick;
     }
 
+    @Override
+    public void onQRCodeScanResult(String result) {
+
+    }g
     private class SendVirtualStickDataTask extends TimerTask {
         @Override
         public void run() {
