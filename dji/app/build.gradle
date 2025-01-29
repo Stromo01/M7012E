@@ -75,6 +75,7 @@ android {
 }
 
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.zxing:core:3.4.1'
     implementation 'com.google.zxing:android-core:3.3.0'
     implementation 'androidx.multidex:multidex:2.0.0'

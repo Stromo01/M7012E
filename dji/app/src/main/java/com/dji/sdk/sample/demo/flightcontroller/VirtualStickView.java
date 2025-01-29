@@ -252,7 +252,30 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
         screenJoystickLeft.setJoystickListener(null);
         screenJoystickRight.setJoystickListener(null);
     }
+    // CameraScanner code implementation maby ???
+    /*
+    private CameraScanner cameraScanner;
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        cameraScanner = new CameraScanner();
+        cameraScanner.scanQRCode(this);
+    }
+
+    @Override
+    public void onQRCodeScanResult(String result) {
+        if (result != null) {
+            // Display the result
+            Toast.makeText(this, "QR Code Result: " + result, Toast.LENGTH_LONG).show();
+        } else {
+            // Handle the case where the QR code could not be decoded
+            Toast.makeText(this, "Failed to decode QR Code", Toast.LENGTH_LONG).show();
+        }
+    }
+    */
 
     @Override
     public void onClick(View v) {
@@ -404,6 +427,9 @@ public class VirtualStickView extends RelativeLayout implements View.OnClickList
                     }
                     //Drone has arrived at waypoint
                     //TODO: Add camera functions here
+                    */
+
+                    /*
                     }
                     catch (Exception e){
                         ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());

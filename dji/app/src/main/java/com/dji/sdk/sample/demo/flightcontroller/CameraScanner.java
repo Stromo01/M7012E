@@ -79,7 +79,7 @@ public class CameraScanner {
         });
     }
 
-    private String decodeQRCode(Bitmap bitmap) {
+    public String decodeQRCode(Bitmap bitmap) { // public for test purposes now otherwise private
         int[] intArray = new int[bitmap.getWidth() * bitmap.getHeight()];
         bitmap.getPixels(intArray, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
@@ -94,7 +94,10 @@ public class CameraScanner {
         }
     }
 
+
     public interface QRCodeScanCallback {
         void onQRCodeScanResult(String result);
     }
+
+
 }
