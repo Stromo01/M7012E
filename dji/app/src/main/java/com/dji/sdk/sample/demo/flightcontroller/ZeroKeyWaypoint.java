@@ -55,7 +55,6 @@ public class ZeroKeyWaypoint {
         logFile = new File(logDir, "ZeroKeyWaypointLog"+System.currentTimeMillis()+".txt");
         logToFile("ZeroKeyWaypoint constructor called");
         current_pos = new int[]{0, 0, 0};//TODO: Remove this temporary position for test
-
             flightController = DJISampleApplication.getAircraftInstance().getFlightController();
             flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
             flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
@@ -70,7 +69,7 @@ public class ZeroKeyWaypoint {
             Log.e(TAG, "Error initializing ZeroKeyWaypoint", e);
         };
     }
-    public boolean haveArrived(){
+    public boolean haveArrived(){ //Check if drone is within specified accuracy of waypoint
         int[] distance = calculateDistance(current_pos, waypoint_pos);
         logToFile("calculateDistance "+distance[0]+", "+distance[1]);
         int height = calculateHeight(current_pos, waypoint_pos);
@@ -84,7 +83,7 @@ public class ZeroKeyWaypoint {
             return false;
         }
     }
-    public boolean nextWaypoint() {
+    public boolean nextWaypoint() { //Set next waypoint as current waypoint
         logToFile("nextWaypoint called with " + waypoints.size() + " waypoints");
         if (waypoints.size() > 1) {
             waypoint_pos = waypoints.remove(0);

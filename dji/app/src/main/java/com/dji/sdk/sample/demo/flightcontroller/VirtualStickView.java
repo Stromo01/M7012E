@@ -45,6 +45,8 @@ import dji.keysdk.KeyManager;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.flightcontroller.Simulator;
 import dji.common.flightcontroller.FlightControllerState;
+import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
+
 
 
 /**
@@ -333,13 +335,13 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
-                flightController.startTakeoff(new CommonCallbacks.CompletionCallback() {
+                flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { //Take off
                     @Override
                     public void onResult(DJIError djiError) {
                         DialogUtils.showDialogBasedOnError(getContext(), djiError);
                     }
                 });
-                flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() {
+                flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() { //Enable virtual stick mode
                     @Override
                     public void onResult(DJIError djiError) {
                         flightController.setVirtualStickAdvancedModeEnabled(true);
@@ -349,16 +351,15 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 pitch=0f;
                 throttle=0f;
                 yaw=0f;
-                if (null == sendVirtualStickDataTimer) {
+                if (null == sendVirtualStickDataTimer) { //Create timer and task to send virtual stick data
                     sendVirtualStickDataTask = new SendVirtualStickDataTask();
                     sendVirtualStickDataTimer = new Timer();
-
                 }
                 try {
                     Handler handler = new Handler(Looper.getMainLooper());
                     Runnable updateValuesRunnable = new Runnable() {
                         @Override
-                        public void run() {
+                        public void run() { //Run method that runs in a loop until all waypoints are visited
                             handleWaypointNavigation();
                         }
 
@@ -379,6 +380,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                 String result="Result here";
                                 zeroKey.logToFile("Qrcode result: " + result);
                                 zeroKey.nextWaypoint();
+                                scheduleNextRun();
                             }
                         }
 
@@ -398,7 +400,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                             }
                         }
 
-                        private void updateFlightControlData(float[] values) {
+                        private void updateFlightControlData(float[] values) { //Update flight control data and send it to the drone using timer and task
                             if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
                                 pitch = values[0];
                                 throttle = values[1];
@@ -480,7 +482,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     @Override
     public void onQRCodeScanResult(String result) {
 
-    }g
+    }
     private class SendVirtualStickDataTask extends TimerTask {
         @Override
         public void run() {
