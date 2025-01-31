@@ -2,7 +2,13 @@ package com.dji.sdk.sample.demo.flightcontroller;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
+import androidx.annotation.NonNull;
+
+import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
+import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
+import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
 import com.google.zxing.Result;
@@ -16,6 +22,22 @@ import dji.sdk.media.MediaFile;
 import dji.sdk.media.MediaManager;
 
 import java.util.List;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.util.Log;
+
+import com.dji.sdk.sample.R;
+import com.dji.sdk.sample.internal.controller.DJISampleApplication;
+import com.dji.sdk.sample.internal.utils.ModuleVerificationUtil;
+import com.dji.sdk.sample.internal.utils.ToastUtils;
+import com.dji.sdk.sample.internal.view.BaseThreeBtnView;
+
+import androidx.annotation.NonNull;
+import dji.common.camera.SettingsDefinitions;
+import dji.common.error.DJIError;
+import dji.common.util.CommonCallbacks;
+import dji.sdk.camera.Camera;
+import dji.sdk.media.MediaFile;
 
 public class CameraScanner {
 
@@ -27,23 +49,47 @@ public class CameraScanner {
     }
 
     private void initializeCamera() {
-        camera = DJISampleApplication.getProductInstance().getCamera();
-        if (camera != null) {
-            camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, new CommonCallbacks.CompletionCallback() {
+
+        if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            camera = DJISampleApplication.getAircraftInstance().getCamera();
+            if (ModuleVerificationUtil.isMatrice300RTK() || ModuleVerificationUtil.isMavicAir2()) {
+                camera.setFlatMode(SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE, djiError -> ToastUtils.setResultToToast("setFlatMode to PHOTO_SINGLE"));
+            } else {
+                camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, djiError -> ToastUtils.setResultToToast("setMode to shoot_PHOTO"));
+            }
+            camera.setMediaFileCallback(new MediaFile.Callback() {
+                @Override
+                public void onNewFile(@NonNull MediaFile mediaFile) {
+                    ToastUtils.setResultToToast("New photo generated");
+                }
+            });
+        }
+            /*camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError != null) {
                         // Handle error
                     }
                 }
-            });
+            });*/
             mediaManager = camera.getMediaManager();
-        }
-    }
 
+    }
+    private boolean isModuleAvailable() {
+        return (null != DJISampleApplication.getProductInstance()) && (null != DJISampleApplication.getProductInstance()
+                .getCamera());
+    }
     public void scanQRCode(final QRCodeScanCallback callback) {
+        DJISampleApplication.getProductInstance()
+                .getCamera()
+                .startShootPhoto(djiError -> {
+                    if (null == djiError) {
+
+                    } else {
+                    }
+                });
         if (mediaManager != null) {
-            mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
+            mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
                     if (djiError == null) {

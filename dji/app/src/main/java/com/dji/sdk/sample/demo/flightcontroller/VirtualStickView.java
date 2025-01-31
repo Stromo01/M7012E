@@ -312,6 +312,19 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
                 break;
             case R.id.btn_yaw_control_mode:
+                //TODO: Camera controls and qr code scanning
+                //TODO: Take picture, scan QR code, return result here
+                CameraScanner cameraScanner = new CameraScanner();
+                cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
+                    @Override
+                    public void onQRCodeScanResult(String result) {
+                        if (result != null) {
+                            zeroKey.logToFile("Qrcode result: " + result);
+                        } else {
+                            zeroKey.logToFile("Qrcode scan failed");
+                        }
+                    }
+                });
 
                 break;
             case R.id.btn_vertical_control_mode:
@@ -377,10 +390,19 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                             else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
                                 //TODO: Camera controls and qr code scanning
                                 //TODO: Take picture, scan QR code, return result here
-                                String result="Result here";
-                                zeroKey.logToFile("Qrcode result: " + result);
-                                zeroKey.nextWaypoint();
-                                scheduleNextRun();
+                                CameraScanner cameraScanner = new CameraScanner();
+                                cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
+                                    @Override
+                                    public void onQRCodeScanResult(String result) {
+                                        if (result != null) {
+                                            zeroKey.logToFile("Qrcode result: " + result);
+                                        } else {
+                                            zeroKey.logToFile("Qrcode scan failed");
+                                        }
+                                        zeroKey.nextWaypoint();
+                                        scheduleNextRun();
+                                    }
+                                });
                             }
                         }
 
