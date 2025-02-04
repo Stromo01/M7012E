@@ -121,25 +121,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
         layoutInflater.inflate(R.layout.view_virtual_stick, this, true);
         initParams();
         initUI();
-        triggerWebRequest();
     }
 
-    private void triggerWebRequest() {
-        WebserverRequestHandler.OnRequestCompleteListener listener = resultMap -> {
-            if (resultMap.containsKey("result")) {
-                String response = resultMap.get("result");
-                Log.i("MainActivity", "API Response: " + response);
-                // Update UI with response here, e.g., display in a TextView
-            } else {
-                String error = resultMap.get("error");
-                Log.e("MainActivity", "API Error: " + error);
-                // Handle error, e.g., show a Toast or error dialog
-            }
-        };
-
-        WebserverRequestHandler request = new WebserverRequestHandler(listener);
-        request.execute(); // Uses default MOCK_BASE_URL
-    }
 
     private void initParams() {
         // We recommand you use the below settings, a standard american hand style.

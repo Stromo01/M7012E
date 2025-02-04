@@ -2,6 +2,9 @@ package com.dji.sdk.sample.internal.api;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.dji.sdk.sample.internal.utils.ToastUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,81 +14,55 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WebserverRequestHandler extends AsyncTask<String, Void, Map<String, String>> {
-    private static final String TAG = "ZeroKeyRequest";
-    private final OnRequestCompleteListener callback;
+import org.eclipse.paho.client.mqttv3.*;
+import java.nio.charset.StandardCharsets;
+import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+import java.security.MessageDigest;
+import java.time.Instant;
 
-    // Base URL for testing with a local Python server
-    private static final String MOCK_BASE_URL = "http://10.0.2.2:8080/mock_response.json"; // Replace localhost with 10.0.2.2 for Android emulator
+public class WebserverRequestHandler {
+    private static final String BROKER = "tcp://192.168.10.194:1883";
+    private static final String CLIENT_ID = "device-1234";
+    private static final String TOPIC = "test";
 
-    public WebserverRequestHandler(OnRequestCompleteListener callback) {
-        this.callback = callback;
-    }
 
-    @Override
-    protected Map<String, String> doInBackground(String... params) {
-        Log.i(TAG, "Do in background started");
 
-        // Use the first parameter if provided; otherwise, default to the mock server
-        String urlString = params.length > 0 ? params[0] : MOCK_BASE_URL;
-        Log.i(TAG, "Requesting URL: " + urlString);
-
-        return makeHttpRequest(urlString);
-    }
-
-    @Override
-    protected void onPostExecute(Map<String, String> resultMap) {
-        if (callback != null) {
-            callback.onRequestComplete(resultMap);
-        }
-    }
-
-    private Map<String, String> makeHttpRequest(String urlString) {
-        Map<String, String> resultMap = new HashMap<>();
-        HttpURLConnection urlConnection = null;
-
+    public static void startMQTTFlow() {
         try {
-            urlConnection = initializeConnection(urlString);
-            String response = readResponse(urlConnection);
-            resultMap.put("result", response);
-            Log.i(TAG, "Response: " + response);
-        } catch (IOException e) {
-            Log.e(TAG, "Error making ZeroKey request", e);
-            resultMap.put("error", "Failed to make request: " + e.getMessage());
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
+            MqttClient client = new MqttClient(BROKER, CLIENT_ID, new MqttDefaultFilePersistence());
+            MqttConnectOptions options = new MqttConnectOptions();
+
+            // Use the ephemeral key as the password
+            options.setUserName("device1");
+            options.setCleanSession(true);
+
+            // Callback handlers
+            client.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable cause) {
+                    ToastUtils.setResultToToast("Connection lost: " + cause.getMessage());
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) {
+                    ToastUtils.setResultToToast("Received message: " + new String(message.getPayload()));
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+                    ToastUtils.setResultToToast("Message delivered successfully!");
+                }
+            });
+
+            // Connect and subscribe
+            client.connect(options);
+            ToastUtils.setResultToToast("Connected to broker.");
+            client.subscribe(TOPIC);
+            ToastUtils.setResultToToast("Subscribed to topic: " + TOPIC);
+
+        } catch (MqttException e) {
+            ToastUtils.setResultToToast("Error connecting to broker: " + e.getMessage());
         }
-
-        return resultMap;
-    }
-
-    private HttpURLConnection initializeConnection(String urlString) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        urlConnection.setRequestMethod("GET");
-        urlConnection.setRequestProperty("Content-Type", "application/json");
-        urlConnection.setRequestProperty("Authorization", "Bearer YOUR_API_KEY"); // Replace with actual key or mock key
-        return urlConnection;
-    }
-
-    private String readResponse(HttpURLConnection urlConnection) throws IOException {
-        InputStream inputStream = urlConnection.getInputStream();
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-
-        while ((line = bufferedReader.readLine()) != null) {
-            stringBuilder.append(line).append("\n");
-        }
-
-        return stringBuilder.toString();
-    }
-
-    public interface OnRequestCompleteListener {
-        void onRequestComplete(Map<String, String> resultMap);
     }
 }
 

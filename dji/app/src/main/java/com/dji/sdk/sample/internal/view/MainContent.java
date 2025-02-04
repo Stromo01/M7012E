@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.bluetooth.BluetoothView;
+import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.controller.MainActivity;
 import com.dji.sdk.sample.internal.model.ViewWrapper;
@@ -186,8 +187,9 @@ public class MainContent extends RelativeLayout {
         getmBtnRegisterAppForLDM.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                isregisterForLDM = true;
-                checkAndRequestPermissions();
+                //isregisterForLDM = true;
+                WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
+                webserverRequestHandler.startMQTTFlow();
             }
         });
         mBtnOpen.setOnClickListener(new OnClickListener() {
