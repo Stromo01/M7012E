@@ -189,7 +189,7 @@ public class MainContent extends RelativeLayout {
             public void onClick(View v) {
                 //isregisterForLDM = true;
                 WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
-                webserverRequestHandler.startMQTTFlow();
+                webserverRequestHandler.startMQTTFlow(getContext());
             }
         });
         mBtnOpen.setOnClickListener(new OnClickListener() {
