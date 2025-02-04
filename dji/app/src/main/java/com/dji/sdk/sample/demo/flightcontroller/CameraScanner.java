@@ -80,9 +80,7 @@ public class CameraScanner {
                 .getCamera());
     }
     public void scanQRCode(final QRCodeScanCallback callback) {
-        DJISampleApplication.getProductInstance()
-                .getCamera()
-                .startShootPhoto(djiError -> {
+        DJISampleApplication.getProductInstance().getCamera().startShootPhoto(djiError -> {
                     if (null == djiError) {
 
                     } else {
@@ -92,21 +90,24 @@ public class CameraScanner {
             mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
                 @Override
                 public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        List<MediaFile> mediaFiles = mediaManager.getSDCardFileListSnapshot();
+                    if (djiError == null) { // we get an error here for image 1 and 2 and 4
+                        List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
                         if (mediaFiles != null && !mediaFiles.isEmpty()) {
                             MediaFile latestMediaFile = mediaFiles.get(0);
                             fetchThumbnailAndDecode(latestMediaFile, callback);
                         } else {
-                            callback.onQRCodeScanResult(null);
+                            // check if the code gets here
+                            callback.onQRCodeScanResult("null row 102"); // image 3
                         }
                     } else {
-                        callback.onQRCodeScanResult(null);
+                        // check if the code gets here
+                        callback.onQRCodeScanResult("null row 106"); // image 1 and 2 and 4
                     }
                 }
             });
         } else {
-            callback.onQRCodeScanResult(null);
+            // check if the code gets here
+            callback.onQRCodeScanResult("null row 112");
         }
     }
 
@@ -119,7 +120,8 @@ public class CameraScanner {
                     String result = decodeQRCode(bitmap);
                     callback.onQRCodeScanResult(result);
                 } else {
-                    callback.onQRCodeScanResult(null);
+                    // check if the code gets here
+                    callback.onQRCodeScanResult("null row 126");
                 }
             }
         });
