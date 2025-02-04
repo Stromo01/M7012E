@@ -189,7 +189,11 @@ public class MainContent extends RelativeLayout {
             public void onClick(View v) {
                 //isregisterForLDM = true;
                 WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
-                webserverRequestHandler.startMQTTFlow(getContext());
+                try{
+                    webserverRequestHandler.startMQTTFlow(getContext());
+                } catch (Exception e) {
+                    ToastUtils.setResultToToast("Error: " + e);
+                }
             }
         });
         mBtnOpen.setOnClickListener(new OnClickListener() {
