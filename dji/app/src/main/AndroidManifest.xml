@@ -17,6 +17,9 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-feature
         android:name="android.hardware.usb.host"
         android:required="false"/>
@@ -49,7 +52,8 @@
             android:value="13e63b61187563988a2051cd"/>
         <!-- Required for receiving accessory attachment events.
             This is necessary for product when connecting over USB. -->
-
+        <service android:name="org.eclipse.paho.android.service.MqttService">
+        </service>
         <activity
             android:name="com.dji.sdk.sample.internal.controller.MainActivity"
             android:label="@string/sample_app_name"
