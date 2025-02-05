@@ -137,7 +137,8 @@ public class CameraScanner {
                         callback.onQRCodeScanResult("null - No media files found");
                     }
                 } else {
-                    Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
+                    //Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
+                    zeroKey.logToFile("Error refreshing file list: " + djiError.getDescription());
                     callback.onQRCodeScanResult("null - Error refreshing file list");
                 }
             }
@@ -171,20 +172,6 @@ public class CameraScanner {
             }
         });
     }
-
-
-
-            private void logToFile(String message) {
-
-
-                try {
-                    FileWriter writer = new FileWriter(getContext().getExternalFilesDir(null) + "/log.txt", true);
-                    writer.append(message).append("\n");
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
 
             // Example usage in your decodeQRCode method
             private String decodeQRCode(Bitmap bitmap) {
