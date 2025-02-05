@@ -295,8 +295,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
                 break;
             case R.id.btn_yaw_control_mode:
-                //TODO: Camera controls and qr code scanning
-                //TODO: Take picture, scan QR code, return result here
                 CameraScanner cameraScanner = new CameraScanner();
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
@@ -308,7 +306,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                         }
                     }
                 });
-
                 break;
             case R.id.btn_vertical_control_mode:
                 zeroKey.setCurrentPos(zeroKey.getWaypoints().get(0));

@@ -46,83 +46,127 @@ import dji.sdk.media.MediaFile;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import android.os.Handler;
+import android.os.Looper;
+
+
 public class CameraScanner {
 
     private Camera camera;
-    private MediaManager mediaManager;
 
-    public CameraScanner() {
-        initializeCamera();
+    private ZeroKeyWaypoint zeroKey;
+    private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
+    private  Context context;  // add
+
+    public CameraScanner() { // add
+        initializeCamera();  // sätta upp kameran
     }
-
+    // Kollar om kamera är tillgänglig
     private void initializeCamera() {
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
+            // Hämtar kameran från drönaren och kontrollerar att den inte är null
             camera = DJISampleApplication.getAircraftInstance().getCamera();
-            if (ModuleVerificationUtil.isMatrice300RTK() || ModuleVerificationUtil.isMavicAir2()) {
-                camera.setFlatMode(SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE, djiError -> ToastUtils.setResultToToast("setFlatMode to PHOTO_SINGLE"));
-            } else {
-                camera.setMode(SettingsDefinitions.CameraMode.SHOOT_PHOTO, djiError -> ToastUtils.setResultToToast("setMode to shoot_PHOTO"));
-            }
-            camera.setMediaFileCallback(new MediaFile.Callback() {
-                @Override
-                public void onNewFile(@NonNull MediaFile mediaFile) {
-                    ToastUtils.setResultToToast("New photo generated");
+            if (camera != null){
+                // Om drönaren är en Matrice 300 RTK eller Mavic Air 2, sätts kameran i single photo mode
+                if (ModuleVerificationUtil.isMatrice300RTK() || ModuleVerificationUtil.isMavicAir2()) {
+                    // Anropar setFlatMode() på camera för att sätta den i "PHOTO_SINGLE"-läge.
+                    camera.setFlatMode(SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE, djiError -> {
+                        // kolla om det finns fel
+                        if (djiError == null){  // om kameraläget sattes korrekt
+                            Log.d("CameraScanner", "Camera mode set to PHOTO_SINGLE"); // loggmeddelande (Log.d) skrivs ut
+
+                        }else { // om det finns fel
+                            Log.e("CameraScanner", "Error setting camera mode: " + djiError.getDescription());
+                        }
+                    });
+
+                }else {
+                    // sätts kamera att gå in i enskilt fotoläge
+                    camera.setFlatMode(SettingsDefinitions.FlatCameraMode.PHOTO_SINGLE, djiError -> {
+                        if (djiError == null) { // om  kameran har växlats till PHOTO_SINGLE läge utan problem.
+                            Log.d("CameraScanner", "Camera mode set to SHOOT_PHOTO"); // logga ett meddelande om att allt gick bra
+                        } else { // något gick fel när kameran skulle växlas till PHOTO_SINGLE
+                            // skrivs ut ett fel medelande + hämtar en beskrivning av felet
+                            Log.e("CameraScanner", "Error setting camera mode: " + djiError.getDescription());
+                        }
+                    });
                 }
-            });
+
+                mediaManager = camera.getMediaManager(); // hämta MediaManager från kameran
+                if (mediaManager == null) {
+                    Log.e("CameraScanner", "Error: MediaManager is null");
+                }
+            } else {
+                Log.e("CameraScanner", "Error: Camera is null");
+            }
+        } else {
+            Log.e("CameraScanner", "Error: Camera module is not available");
         }
-        mediaManager = camera.getMediaManager();
     }
+
+
 
     public void scanQRCode(final QRCodeScanCallback callback) {
-        DJISampleApplication.getProductInstance().getCamera().startShootPhoto(djiError -> {
-            if (null == djiError) {
+        if (camera == null || mediaManager == null) {
+            Log.e("CameraScanner", "Camera or MediaManager not initialized");
+            callback.onQRCodeScanResult("null - Camera or MediaManager not initialized");
+            return;
+        }
+        camera.startShootPhoto(djiError -> {
+            if (djiError == null) {
                 Log.d("CameraScanner", "Photo taken successfully");
+                fetchLatestMedia(callback);
             } else {
                 Log.e("CameraScanner", "Error taking photo: " + djiError.getDescription());
+                callback.onQRCodeScanResult("null - Error taking photo");
             }
         });
-
-        if (mediaManager != null) {
-            mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError == null) {
-                        List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
-                        if (mediaFiles != null && !mediaFiles.isEmpty()) {
-                            MediaFile latestMediaFile = mediaFiles.get(0);
-                            fetchThumbnailAndDecode(latestMediaFile, callback);
-                        } else {
-                            Log.e("CameraScanner", "No media files found");
-                            callback.onQRCodeScanResult("null row 89");
-                        }
+    }
+    // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
+    private void fetchLatestMedia(final QRCodeScanCallback callback) {
+        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
+            @Override
+            public void onResult(DJIError djiError) {
+                if (djiError == null) {
+                    List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
+                    if (mediaFiles != null && !mediaFiles.isEmpty()) {
+                        MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
+                        fetchThumbnailAndDecode(latestMediaFile, callback);
                     } else {
-                        Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
-                        callback.onQRCodeScanResult("null row 93");
+                        Log.e("CameraScanner", "No media files found");
+                        callback.onQRCodeScanResult("null - No media files found");
                     }
+                } else {
+                    Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
+                    callback.onQRCodeScanResult("null - Error refreshing file list");
                 }
-            });
-        } else {
-            Log.e("CameraScanner", "MediaManager is null");
-            callback.onQRCodeScanResult("null row 99");
-        }
+            }
+        });
     }
 
+    // MediaFile mediaFile: Den bildfil som ska hämtas och skannas.
+    // QRCodeScanCallback callback: Callback som används för att returnera resultatet av QR-kodsskanningen.
     private void fetchThumbnailAndDecode(final MediaFile mediaFile, final QRCodeScanCallback callback) {
         mediaFile.fetchPreview(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
                 if (djiError == null) {
                     Bitmap bitmap = mediaFile.getPreview();
-                    if (bitmap != null) {
+                    if (bitmap != null && bitmap.getWidth() > 0 && bitmap.getHeight() > 0) {
                         String result = decodeQRCode(bitmap);
-                        callback.onQRCodeScanResult(result);
+                        if (result != null && !result.isEmpty()) {
+                            callback.onQRCodeScanResult(result);
+                        } else {
+                            Log.e("CameraScanner", "Bitmap is null");
+                            callback.onQRCodeScanResult("null row 114");
+                        }
                     } else {
-                        Log.e("CameraScanner", "Bitmap is null");
-                        callback.onQRCodeScanResult("null row 114");
+                        Log.e("CameraScanner", "Error fetching preview: " + djiError.getDescription());
+                        callback.onQRCodeScanResult("null row 118");
                     }
                 } else {
                     Log.e("CameraScanner", "Error fetching preview: " + djiError.getDescription());
-                    callback.onQRCodeScanResult("null row 118");
+                    callback.onQRCodeScanResult("null - Error fetching preview: " + djiError.getDescription());
                 }
             }
         });
@@ -130,35 +174,37 @@ public class CameraScanner {
 
 
 
-    private void logToFile(String message) {
-        try {
-            FileWriter writer = new FileWriter(getContext().getExternalFilesDir(null) + "/log.txt", true);
-            writer.append(message).append("\n");
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+            private void logToFile(String message) {
 
-    // Example usage in your decodeQRCode method
-    private String decodeQRCode(Bitmap bitmap) {
-        int[] intArray = new int[bitmap.getWidth() * bitmap.getHeight()];
-        bitmap.getPixels(intArray, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
-        RGBLuminanceSource source = new RGBLuminanceSource(bitmap.getWidth(), bitmap.getHeight(), intArray);
-        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
-        try {
-            Result result = new MultiFormatReader().decode(binaryBitmap);
-            return result.getText();
-        } catch (Exception e) {
-            String errorMessage = "Error decoding QR code: " + e.getMessage();
-            Log.e("CameraScanner", errorMessage);
-            logToFile(errorMessage);
-            logToFile("Bitmap width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
-            logToFile("BinaryBitmap: " + binaryBitmap.toString());
-            return "null row 159";
-        }
-    }
+                try {
+                    FileWriter writer = new FileWriter(getContext().getExternalFilesDir(null) + "/log.txt", true);
+                    writer.append(message).append("\n");
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // Example usage in your decodeQRCode method
+            private String decodeQRCode(Bitmap bitmap) {
+                int[] intArray = new int[bitmap.getWidth() * bitmap.getHeight()];
+                bitmap.getPixels(intArray, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+                RGBLuminanceSource source = new RGBLuminanceSource(bitmap.getWidth(), bitmap.getHeight(), intArray);
+                BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
+                try {
+                    Result result = new MultiFormatReader().decode(binaryBitmap);
+                    return result.getText();
+                } catch (Exception e) {
+                    String errorMessage = "Error decoding QR code: " + e.getMessage();
+                    Log.e("CameraScanner", "errordecoding" + e.getMessage());
+                    zeroKey.logToFile(errorMessage);
+                    zeroKey.logToFile("Bitmap width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
+                    zeroKey.logToFile("errordecoding" + e.getMessage());
+                    return "null row 159";
+                }
+            }
 
     public interface QRCodeScanCallback {
         void onQRCodeScanResult(String result);
