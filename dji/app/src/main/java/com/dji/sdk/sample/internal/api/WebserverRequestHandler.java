@@ -24,12 +24,34 @@ import java.security.MessageDigest;
 import java.time.Instant;
 
 public class WebserverRequestHandler {
-    private static final String BROKER = "tcp://broker.hivemq.com:1883";
+    private static final String BROKER = "tcp://192.168.10.193:1883";
     private String CLIENT_ID;
-    private static final String TOPIC = "m7012e/1";
+    private static final String TOPIC = "test";
     private ZeroKeyWaypoint zeroKeyWaypoint;
     private MqttAndroidClient client;
 
+
+    public void startMQTTFlow(Context context) {
+        try {
+            zeroKeyWaypoint = new ZeroKeyWaypoint(context);
+        } catch (Exception e) {//Will always throw error if drone is not connected
+
+        }
+
+        try {
+            CLIENT_ID=MqttClient.generateClientId();
+            zeroKeyWaypoint.logToFile("Client id : " + CLIENT_ID);
+            client = new MqttAndroidClient(context, BROKER, CLIENT_ID);
+            connect();
+            zeroKeyWaypoint.logToFile("End of MQTT flow");
+        }
+        catch(Exception e) {
+            zeroKeyWaypoint.logToFile("Error: " + e);
+            ToastUtils.setResultToToast("Error: " + e);
+
+        }
+
+    }
     private void sub(){
         try {
             client.subscribe(TOPIC, 0);
@@ -62,21 +84,13 @@ public class WebserverRequestHandler {
 
     private void connect(){
         try{
-
-
             IMqttToken token = client.connect();
             token.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
                     zeroKeyWaypoint.logToFile("Connected to broker.");
                     ToastUtils.setResultToToast("Connected to broker.");
-                    try {
-                        zeroKeyWaypoint.logToFile("Subscribing to topic: " + TOPIC);
-                        client.subscribe(TOPIC, 0);
-                    } catch (MqttException e) {
-                        zeroKeyWaypoint.logToFile("Error subscribing to topic: " + e);
-                        ToastUtils.setResultToToast("Error subscribing to topic: " + e);
-                    }
+                    sub();
                 }
 
                 @Override
@@ -92,32 +106,7 @@ public class WebserverRequestHandler {
         }
 
     }
-    public void startMQTTFlow(Context context) {
-        try {
-            zeroKeyWaypoint = new ZeroKeyWaypoint(context);
-        } catch (Exception e) {
-            ToastUtils.setResultToToast("Error: " + e);
-        }
 
-        try {
-            CLIENT_ID=MqttClient.generateClientId();
-            zeroKeyWaypoint.logToFile("Client id : " + CLIENT_ID);
-        client = new MqttAndroidClient(context, BROKER, CLIENT_ID);
-        MqttConnectOptions options = new MqttConnectOptions();
-            connect();
-            sub();
-            zeroKeyWaypoint.logToFile("Trying to Connecting to broker: " + BROKER);
-            // Connect and subscribe
-
-            zeroKeyWaypoint.logToFile("End of MQTT flow");
-        }
-        catch(Exception e) {
-            zeroKeyWaypoint.logToFile("Error: " + e);
-            ToastUtils.setResultToToast("Error: " + e);
-
-        }
-
-    }
 }
 
 
