@@ -2,8 +2,8 @@ package com.dji.sdk.sample.internal.api;
 
 public class MqttDataStore {
     private static MqttDataStore instance;
-    private String position;
-    private String angle;
+    private float[] position;
+    private float[] angle;
 
     // Private constructor to prevent instantiation
     private MqttDataStore() {}
@@ -17,15 +17,17 @@ public class MqttDataStore {
     }
 
     // Setter method to store the position
-    public void setPosition(String position) {
+    public void setPosition(float[] position) {
         this.position = position;
     }
-
+    public void setAngle(float[] angle) {
+        this.angle = angle;
+    }
     // Getter method to retrieve the position
-    public String getPosition() {
+    public float[] getPosition() {
         return position;
     }
-    public String getAngle() {
+    public float[] getAngle() {
         return angle;
     }
 }

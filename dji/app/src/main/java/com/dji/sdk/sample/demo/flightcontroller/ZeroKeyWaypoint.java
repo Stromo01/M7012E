@@ -108,10 +108,8 @@ public class ZeroKeyWaypoint {
     public float[] goToWaypoint(){
         try {
             ToastUtils.setResultToToast("Going to waypoint");
-            //current_angle = calculateYawFromQuaternion(zeroKey.getAngle()); //TODO: Set current angle to zeroKey angle
-            //current_pos = TODO: Set current position to zeroKey position
-            String pos = MqttDataStore.getInstance().getPosition();
-            String angle = MqttDataStore.getInstance().getAngle();
+            //current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle()); //TODO: Set current angle to zeroKey angle
+            //current_pos = MqttDataStore.getInstance().getPosition();TODO: Set current position to zeroKey position
             int[] distance = calculateDistance(current_pos, waypoint_pos);
             int height = calculateHeight(current_pos, waypoint_pos);
             yaw = yawToWaypoint();//Yaw movement TODO: This might need to run in a loop before the other movements
@@ -204,7 +202,6 @@ public class ZeroKeyWaypoint {
         int [] distance = new int[2];
         for (int i = 0; i < 1; i++) {
             distance[i] = waypoint_pos[i] - current_pos[i];
-
         }
         return distance;
     }
@@ -237,10 +234,10 @@ public class ZeroKeyWaypoint {
         } catch (Exception e) {
             logToFile("Error reading waypoints from file: " + e.getMessage());
         }*/
-        setWaypoint(new int[]{0, 10, 0});
-        setWaypoint(new int[]{100, 100, 0});
-        setWaypoint(new int[]{10, 10, 0});
-        setWaypoint(new int[]{100, 100, 0});
+        setWaypoint(new int[]{0, 3, 0});
+        setWaypoint(new int[]{3, 3, 0});
+        setWaypoint(new int[]{3, 3, 0});
+        setWaypoint(new int[]{3, -3, 0});
 
     }
     public void logToFile(String message) {

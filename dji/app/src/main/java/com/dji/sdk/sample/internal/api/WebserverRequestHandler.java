@@ -6,8 +6,6 @@ import android.util.Log;
 
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.BufferedReader;
@@ -23,12 +21,17 @@ import org.eclipse.paho.client.mqttv3.*;
 import java.nio.charset.StandardCharsets;
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.security.MessageDigest;
 import java.time.Instant;
 
 public class WebserverRequestHandler {
     private String CLIENT_ID;
     private static final String TOPIC = "test";
+
+    private String BROKER = "tcp://192.168.30.1";
     private ZeroKeyWaypoint zeroKeyWaypoint;
     private MqttAndroidClient client;
 
@@ -71,21 +74,33 @@ public class WebserverRequestHandler {
                     try {
                         // Convert MQTT message payload to String
                         String payload = new String(message.getPayload());
+                        try {
+                            JSONObject json = new JSONObject(payload);
+                            JSONObject content = json.getJSONObject("Content");
+                            if (content.has("Position")) {
+                                JSONArray positionArray = content.getJSONArray("Position");
+                                float[] position = new float[positionArray.length()];
+                                for (int i = 0; i < positionArray.length(); i++) {
+                                    position[i] = (float) positionArray.getDouble(i);
+                                }
+                                JSONArray angleArray = content.getJSONArray("Angle");
+                                float[] angle = new float[angleArray.length()];
+                                for (int i = 0; i < angleArray.length(); i++) {
+                                    angle[i] = (float) angleArray.getDouble(i);
+                                }
 
-                        // Parse JSON
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        JsonNode rootNode = objectMapper.readTree(payload);
+                                MqttDataStore.getInstance().setPosition(position);
+                                MqttDataStore.getInstance().setAngle(angle);
+                                // Log the extracted position
+                                zeroKeyWaypoint.logToFile("Position: " + position);
+                                zeroKeyWaypoint.logToFile("angle: " + angle);
+                                ToastUtils.setResultToToast("Position: " + position);
+                            }
 
-                        // Extract "position"
-                        String position = rootNode.get("position").asText();
-                        String angle = rootNode.get("angel").asText();
+                        } catch (Exception e) {
+                            System.out.println("Failed to parse JSON: " + e.getMessage());
+                        }
 
-                        MqttDataStore.getInstance().setPosition(position);
-                        MqttDataStore.getInstance().setAngle(angle);
-                        // Log the extracted position
-                        zeroKeyWaypoint.logToFile("Position: " + position);
-                        zeroKeyWaypoint.logToFile("angle: " + angle);
-                        ToastUtils.setResultToToast("Position: " + position);
                     } catch (Exception e) {
                         e.printStackTrace();
                         zeroKeyWaypoint.logToFile("Failed to parse JSON: " + e.getMessage());
