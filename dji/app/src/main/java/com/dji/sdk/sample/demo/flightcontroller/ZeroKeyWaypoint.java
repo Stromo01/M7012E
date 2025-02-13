@@ -4,6 +4,7 @@ package com.dji.sdk.sample.demo.flightcontroller;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.DialogUtils;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
+import com.dji.sdk.sample.internal.api.MqttDataStore;
 
 import android.os.Environment;
 import android.util.Log;
@@ -20,6 +21,7 @@ import dji.common.error.DJIError;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.flightcontroller.FlightController;
+
 import android.content.Context;
 
 
@@ -107,7 +109,9 @@ public class ZeroKeyWaypoint {
         try {
             ToastUtils.setResultToToast("Going to waypoint");
             //current_angle = calculateYawFromQuaternion(zeroKey.getAngle()); //TODO: Set current angle to zeroKey angle
-            //current_pos = zeroKey.getPos();//TODO: Set current position to zeroKey position
+            //current_pos = TODO: Set current position to zeroKey position
+            String pos = MqttDataStore.getInstance().getPosition();
+            String angle = MqttDataStore.getInstance().getAngle();
             int[] distance = calculateDistance(current_pos, waypoint_pos);
             int height = calculateHeight(current_pos, waypoint_pos);
             yaw = yawToWaypoint();//Yaw movement TODO: This might need to run in a loop before the other movements

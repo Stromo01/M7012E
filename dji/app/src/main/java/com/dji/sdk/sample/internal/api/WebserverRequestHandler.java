@@ -6,6 +6,9 @@ import android.util.Log;
 
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,7 +27,6 @@ import java.security.MessageDigest;
 import java.time.Instant;
 
 public class WebserverRequestHandler {
-    private static final String BROKER = "tcp://192.168.10.193:1883";
     private String CLIENT_ID;
     private static final String TOPIC = "test";
     private ZeroKeyWaypoint zeroKeyWaypoint;
@@ -53,6 +55,7 @@ public class WebserverRequestHandler {
 
     }
     private void sub(){
+
         try {
             client.subscribe(TOPIC, 0);
             zeroKeyWaypoint.logToFile("Subscribed to topic: " + TOPIC);
@@ -65,8 +68,28 @@ public class WebserverRequestHandler {
 
                 @Override
                 public void messageArrived(String topic, MqttMessage message) {
-                    zeroKeyWaypoint.logToFile("Received message: " + new String(message.getPayload()));
-                    ToastUtils.setResultToToast("Received message: " + new String(message.getPayload()));
+                    try {
+                        // Convert MQTT message payload to String
+                        String payload = new String(message.getPayload());
+
+                        // Parse JSON
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode rootNode = objectMapper.readTree(payload);
+
+                        // Extract "position"
+                        String position = rootNode.get("position").asText();
+                        String angle = rootNode.get("angel").asText();
+
+                        MqttDataStore.getInstance().setPosition(position);
+                        MqttDataStore.getInstance().setAngle(angle);
+                        // Log the extracted position
+                        zeroKeyWaypoint.logToFile("Position: " + position);
+                        zeroKeyWaypoint.logToFile("angle: " + angle);
+                        ToastUtils.setResultToToast("Position: " + position);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        zeroKeyWaypoint.logToFile("Failed to parse JSON: " + e.getMessage());
+                    }
                 }
 
                 @Override
