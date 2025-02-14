@@ -92,8 +92,8 @@ public class WebserverRequestHandler {
                                     angle[i] = (float) angleArray.getDouble(i);
                                 }
 
-                               // MqttDataStore.getInstance().setPosition(position);
-                                //MqttDataStore.getInstance().setAngle(angle);
+                                MqttDataStore.getInstance().setPosition(position);
+                                MqttDataStore.getInstance().setAngle(angle);
                                 // Log the extracted position
                                 //zeroKeyWaypoint.logToFile("Position: " + position);
                                // zeroKeyWaypoint.logToFile("angle: " + angle);
