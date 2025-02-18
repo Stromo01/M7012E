@@ -41,8 +41,8 @@ public class ZeroKeyWaypoint {
     private boolean isLookingAtBox;
 
     private final float waypointAccuracy = 0.1f;//meters
-    private final float heightThrottle=1f; //m/s
-    private final float pitchVelocity=1f; //m/s
+    private final float heightThrottle=0.1f; //m/s
+    private final float pitchVelocity=0.1f; //m/s
     private final float yawVelocity=90f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
     private File logFile;
