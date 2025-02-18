@@ -153,10 +153,10 @@ public class CameraScanner {
                         callback.onQRCodeScanResult("null - No media files found");
                     }
                 } else {
-                    if (i <= 5){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
+                    if (i <= 10){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
                         i++;
                         fetchLatestMedia(callback); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
-                    } else if (i <= 20) { // Around 99.97 % chance to work if correct.
+                    } else if (i <= 25) { // Around 99.97 % chance to work if correct.
                         i++;
                         initializeCamera();
                         scanQRCode(callback);
