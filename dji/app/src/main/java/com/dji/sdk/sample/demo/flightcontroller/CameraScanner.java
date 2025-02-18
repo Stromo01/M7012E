@@ -57,6 +57,7 @@ public class CameraScanner {
     private ZeroKeyWaypoint zeroKey;
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
+    private int i = 0;
 
     public CameraScanner() { // add
         initializeCamera();  // sätta upp kameran
@@ -110,20 +111,33 @@ public class CameraScanner {
         if (camera == null || mediaManager == null) {
             Log.e("CameraScanner", "Camera or MediaManager not initialized");
             callback.onQRCodeScanResult("null - Camera or MediaManager not initialized");
+            i = 0;
             return;
         }
         camera.startShootPhoto(djiError -> {
             if (djiError == null) {
                 Log.d("CameraScanner", "Photo taken successfully");
                 fetchLatestMedia(callback);
+                i = 0;
             } else {
-                Log.e("CameraScanner", "Error taking photo: " + djiError.getDescription());
-                callback.onQRCodeScanResult("null - Error taking photo");
+                if (i < 10) {
+                    i++;
+                    //initializeCamera();
+                    scanQRCode(callback);
+                }
+                else {
+                    callback.onQRCodeScanResult("null - Error taking photo loop : " + i);
+                    i = 0;
+                    Log.e("CameraScanner", "Error taking photo: " + djiError.getDescription());
+                    callback.onQRCodeScanResult("null - Error taking photo");
+                }
+
             }
         });
     }
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
     private void fetchLatestMedia(final QRCodeScanCallback callback) {
+
         mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -131,15 +145,27 @@ public class CameraScanner {
                     List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
                     if (mediaFiles != null && !mediaFiles.isEmpty()) {
                         MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
+                        i = 0;
                         fetchThumbnailAndDecode(latestMediaFile, callback);
                     } else {
+                        i = 0;
                         Log.e("CameraScanner", "No media files found");
                         callback.onQRCodeScanResult("null - No media files found");
                     }
                 } else {
-                    //Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
-                    zeroKey.logToFile("Error refreshing file list: " + djiError.getDescription());
-                    callback.onQRCodeScanResult("null - Error refreshing file list");
+                    if (i <= 20){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
+                        i++;
+                        fetchLatestMedia(callback); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
+                    } else if (i <= 40) { // Around 99.97 % chance to work if correct.
+                        i++;
+                        initializeCamera();
+                        scanQRCode(callback);
+                    } else {
+                        i = 0;
+                        //Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
+                        zeroKey.logToFile("Error refreshing file list: " + djiError.getDescription());
+                        callback.onQRCodeScanResult("null - Error refreshing file list");
+                    }
                 }
             }
         });
@@ -162,10 +188,12 @@ public class CameraScanner {
                             callback.onQRCodeScanResult("null row 114");
                         }
                     } else {
+                        i= 0;
                         Log.e("CameraScanner", "Error fetching preview: " + djiError.getDescription());
                         callback.onQRCodeScanResult("null row 118");
                     }
                 } else {
+                    i = 0;
                     Log.e("CameraScanner", "Error fetching preview: " + djiError.getDescription());
                     callback.onQRCodeScanResult("null - Error fetching preview: " + djiError.getDescription());
                 }
@@ -182,6 +210,7 @@ public class CameraScanner {
                 BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
                 try {
                     Result result = new MultiFormatReader().decode(binaryBitmap);
+                    i = 0;
                     return result.getText();
                 } catch (Exception e) {
                     String errorMessage = "Error decoding QR code: " + e.getMessage();
@@ -189,6 +218,7 @@ public class CameraScanner {
                     zeroKey.logToFile(errorMessage);
                     zeroKey.logToFile("Bitmap width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
                     zeroKey.logToFile("errordecoding" + e.getMessage());
+                    i = 0;
                     return "null row 159";
                 }
             }
