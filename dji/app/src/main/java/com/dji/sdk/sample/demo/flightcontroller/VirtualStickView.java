@@ -82,6 +82,10 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private ZeroKeyWaypoint zeroKey;
 
+    CameraScanner cameraScanner = new CameraScanner();
+
+    private boolean cameraActivated = false;
+
     public VirtualStickView(Context context) {
         super(context);
         init(context);
@@ -295,7 +299,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
                 break;
             case R.id.btn_yaw_control_mode:
-                CameraScanner cameraScanner = new CameraScanner();
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
                     public void onQRCodeScanResult(String result) {
