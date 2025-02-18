@@ -1,0 +1,7 @@
+{
+    "items": [
+        { "id": 1, "position": 12.34, "angle": 45.67 },
+        { "id": 2, "position": 23.45, "angle": 90.12 },
+        { "id": 3, "position": 34.56, "angle": 135.78 }
+    ]
+}
