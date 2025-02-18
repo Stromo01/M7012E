@@ -14,8 +14,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.virtualstick.FlightControlData;
@@ -23,6 +26,9 @@ import dji.common.util.CommonCallbacks;
 import dji.sdk.flightcontroller.FlightController;
 
 import android.content.Context;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 
 public class ZeroKeyWaypoint {
@@ -217,17 +223,73 @@ public class ZeroKeyWaypoint {
     private float calculateHeight(float[] current_pos, float[] waypoint_pos) {
         return waypoint_pos[2] - current_pos[2];
     }
+    class Item {
+        int id;
+        float position;
+        float angle;
 
+        public Item(int id, float position, float angle) {
+            this.id = id;
+            this.position = position;
+            this.angle = angle;
+        }
+
+        @Override
+        public String toString() {
+            return "ID: " + id + ", Position: " + position + ", Angle: " + angle;
+        }
+    }
     private void loadWaypointsFromCSV(String filePath) {
-        /* //TODO: THIS DOESNT WORK
+        //TODO: THIS DOESNT WORK
+        try{
+            String content = new String(Files.readAllBytes(Paths.get("data.json")));
+            JSONObject jsonObject = new JSONObject(content);
+            JSONArray itemsArray = jsonObject.getJSONArray("items");
+            List<Item> itemList = new ArrayList<>();
+
+            for (int i = 0; i < itemsArray.length(); i++) {
+                JSONObject itemObj = itemsArray.getJSONObject(i);
+                int id = itemObj.getInt("id");
+                double position_ = itemObj.getDouble("position");
+                double angle_ = itemObj.getDouble("angle");
+                float position = (float)position_;
+                float angle = (float)angle_;
+
+                // Create item object and add to list
+                itemList.add(new Item(id, position, angle));
+                logToFile("waypoints"+ itemList);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+
+        /*
         logToFile("loadWaypointsFromCSV called");
-        File file = new File(filePath);
-        if (!file.exists()) {
-            logToFile("File does not exist: " + file.getAbsolutePath());
+        File file_waypoints = new File(filePath);
+        if (!file_waypoints.exists()) {
+            logToFile("File does not exist: " + file_waypoints.getAbsolutePath());
             File files = new File(".");
             logToFile("list: " + Arrays.toString(files.list()));
             return;
         }
+        try{
+            Scanner myReader = new Scanner(file_waypoints);
+            while (myReader.hasNextLine()){
+
+            }
+        }catch{
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+
+
+
+        /*
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             logToFile("Reading waypoints from file");
@@ -242,7 +304,8 @@ public class ZeroKeyWaypoint {
             }
         } catch (Exception e) {
             logToFile("Error reading waypoints from file: " + e.getMessage());
-        }*/
+        }
+        */
         setWaypoint(new float[]{0, 3, 0});
         setWaypoint(new float[]{3, 3, 0});
         setWaypoint(new float[]{3, 3, 0});
