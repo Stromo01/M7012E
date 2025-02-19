@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.bluetooth.BluetoothView;
+import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.controller.MainActivity;
@@ -42,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
 import dji.common.realname.AppActivationState;
@@ -187,10 +189,19 @@ public class MainContent extends RelativeLayout {
         getmBtnRegisterAppForLDM.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //isregisterForLDM = true;
-                WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
+                isregisterForLDM = true;
+                /*WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
                 try{
                     webserverRequestHandler.startMQTTFlow(getContext());
+                } catch (Exception e) {
+                    ToastUtils.setResultToToast("Error: " + e);
+                }
+            }
+        });*/
+
+                ZeroKeyWaypoint zeroKeyWaypoint = new ZeroKeyWaypoint(getContext());
+                try {
+                    zeroKeyWaypoint.setWaypointZeroKey();
                 } catch (Exception e) {
                     ToastUtils.setResultToToast("Error: " + e);
                 }
