@@ -143,9 +143,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             simulator = ModuleVerificationUtil.getSimulator();
         }
         isSimulatorActived = simulator.isSimulatorActive();
-        zeroKey = new ZeroKeyWaypoint(getContext());
         logger = new Logger();
-
     }
 
     private void initUI() {
@@ -311,6 +309,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 });
                 break;
             case R.id.btn_vertical_control_mode:
+                zeroKey = new ZeroKeyWaypoint(getContext());
                 zeroKey.setCurrentPos(zeroKey.getWaypoints().get(0));
                 zeroKey.nextWaypoint();
                 break;
@@ -331,6 +330,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
+                zeroKey = new ZeroKeyWaypoint(getContext());
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { //Take off
                     @Override
                     public void onResult(DJIError djiError) {
@@ -360,32 +360,37 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                         }
 
                         private void handleWaypointNavigation() {
-                            if (zeroKey.getWaypoints().isEmpty()) {//No more waypoints, land
+                           /* if (zeroKey.getWaypoints().isEmpty()) {//No more waypoints, land
                                 handleLanding();
                             }
-                            else if (!zeroKey.haveArrived()) {//Not at waypoint, go to waypoint
-                                float[] values = zeroKey.goToWaypoint();
-                                updateFlightControlData(values);
-                                scheduleNextRun();
-                            } else if (!zeroKey.isLookingAtBox()) {//At waypoint, but not looking at box, yaw to box
-                                handleYawToBox();
-                            }
-                            else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
-                                //TODO: Camera controls and qr code scanning
-                                //TODO: Take picture, scan QR code, return result here
-                                CameraScanner cameraScanner = new CameraScanner();
-                                cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
-                                    @Override
-                                    public void onQRCodeScanResult(String result) {
-                                        if (result != null) {
-                                            logger.log("Qrcode result: " + result);
-                                        } else {
-                                            logger.log("Qrcode scan failed");
+                            else */
+                            try {
+                                if (!zeroKey.haveArrived()) {//Not at waypoint, go to waypoint
+                                    float[] values = zeroKey.goToWaypoint();
+                                    updateFlightControlData(values);
+                                    scheduleNextRun();
+                                } else if (!zeroKey.isLookingAtBox()) {//At waypoint, but not looking at box, yaw to box
+                                    handleYawToBox();
+                                } else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
+                                    //TODO: Camera controls and qr code scanning
+                                    //TODO: Take picture, scan QR code, return result here
+                                    CameraScanner cameraScanner = new CameraScanner();
+                                    cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
+                                        @Override
+                                        public void onQRCodeScanResult(String result) {
+                                            if (result != null) {
+                                                logger.log("Qrcode result: " + result);
+                                            } else {
+                                                logger.log("Qrcode scan failed");
+                                            }
+                                            zeroKey.nextWaypoint();
+                                            scheduleNextRun();
                                         }
-                                        zeroKey.nextWaypoint();
-                                        scheduleNextRun();
-                                    }
-                                });
+                                    });
+                                }
+                            } catch (Exception e) {
+                                ToastUtils.setResultToToast("Error in waypoint navigation: " + e.getMessage());
+                                logger.log("Error in waypoint navigation: " + e.getMessage());
                             }
                         }
 

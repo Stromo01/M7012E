@@ -1,6 +1,7 @@
 package com.dji.sdk.sample.demo.flightcontroller;
 
 
+import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.DialogUtils;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
@@ -53,19 +54,21 @@ public class ZeroKeyWaypoint {
     private static final String TAG = "ZeroKeyWaypoint";
     private Logger logger;
 
+    private WebserverRequestHandler server;
+
 
     public ZeroKeyWaypoint(Context context){
         try {
             this.context = context;
             logger=new Logger();
-            current_pos = new float[]{0, 0, 0};//TODO: Remove this temporary position for test
+            current_pos = new float[]{0, 0, 0};
+            server = new WebserverRequestHandler();
+            server.startMQTTFlow(context);
             initFlightController();
-            String path = "app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/waypoints.csv";
-            loadWaypointsFromCSV(new File(context.getFilesDir(), "waypoints.csv").getAbsolutePath());
+            loadWaypointsFromCSV();
             nextWaypoint();
         } catch (Exception e) {
             logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());
-            Log.e(TAG, "Error initializing ZeroKeyWaypoint", e);
         };
     }
     private void initFlightController(){
@@ -232,10 +235,10 @@ public class ZeroKeyWaypoint {
             return "ID: " + id + ", Position: " + position + ", Angle: " + angle;
         }
     }
-    private void loadWaypointsFromCSV(String filePath) {
+    private void loadWaypointsFromCSV() {
         //TODO: THIS DOESNT WORK
         try{
-            String content = new String(Files.readAllBytes(Paths.get("data.json")));
+            String content = new String(Files.readAllBytes(Paths.get("waypoints.json")));
             JSONObject jsonObject = new JSONObject(content);
             JSONArray itemsArray = jsonObject.getJSONArray("items");
             List<Item> itemList = new ArrayList<>();
@@ -257,49 +260,7 @@ public class ZeroKeyWaypoint {
             e.printStackTrace();
         }
 
-
-
-
-        /*
-        logger.log("loadWaypointsFromCSV called");
-        File file_waypoints = new File(filePath);
-        if (!file_waypoints.exists()) {
-            logger.log("File does not exist: " + file_waypoints.getAbsolutePath());
-            File files = new File(".");
-            logger.log("list: " + Arrays.toString(files.list()));
-            return;
-        }
-        try{
-            Scanner myReader = new Scanner(file_waypoints);
-            while (myReader.hasNextLine()){
-
-            }
-        }catch{
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-
-
-
-
-        /*
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            logger.log("Reading waypoints from file");
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                int[] pos = new int[3];
-                pos[0] = Integer.parseInt(values[0]);
-                pos[1] = Integer.parseInt(values[1]);
-                pos[2] = Integer.parseInt(values[2]);
-                logger.log("Waypoint loaded: " + pos[0] + ", " + pos[1] + ", " + pos[2]);
-                setWaypoint(pos);
-            }
-        } catch (Exception e) {
-            logger.log("Error reading waypoints from file: " + e.getMessage());
-        }
-        */
-        setWaypoint(new float[]{3, -1, 2});
+        //setWaypoint(new float[]{3, -1, 2});
 
     }
     public ArrayList<float[]> getWaypoints(){
