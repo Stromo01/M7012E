@@ -111,6 +111,7 @@ public class CameraScanner {
 
 
     public void scanQRCode(final QRCodeScanCallback callback) {
+        long startTime = System.currentTimeMillis();
         if (camera == null || mediaManager == null) {
             Log.e("CameraScanner", "Camera or MediaManager not initialized");
             callback.onQRCodeScanResult("null - Camera or MediaManager not initialized");
@@ -119,9 +120,13 @@ public class CameraScanner {
         }
         camera.startShootPhoto(djiError -> {
             if (djiError == null) {
+                long endTime = System.currentTimeMillis();
+                long time = (endTime - startTime);
+                logger.log("Time taken: " + time);
                 Log.d("CameraScanner", "Photo taken successfully");
-                fetchLatestMedia(callback);
                 i = 0;
+                long newStartTime = System.currentTimeMillis();
+                fetchLatestMedia(callback, newStartTime);
             } else {
                 if (i < 10) {
                     i++;
@@ -139,26 +144,34 @@ public class CameraScanner {
         });
     }
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
-    private void fetchLatestMedia(final QRCodeScanCallback callback) {
-
+    private void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
         mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
+
             @Override
             public void onResult(DJIError djiError) {
+
                 if (djiError == null) {
                     List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
+
                     if (mediaFiles != null && !mediaFiles.isEmpty()) {
                         MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
                         i = 0;
-                        fetchThumbnailAndDecode(latestMediaFile, callback);
+                        long endTime = System.currentTimeMillis();
+                        long timeTaken = endTime - startTime;
+                        logger.log("Time taken to fetchLatestMedia: " + timeTaken + " ms");
+                        long newStartTime = System.currentTimeMillis();
+                        fetchThumbnailAndDecode(latestMediaFile, callback, newStartTime);
+
                     } else {
                         i = 0;
                         Log.e("CameraScanner", "No media files found");
                         callback.onQRCodeScanResult("null - No media files found");
                     }
+
                 } else {
                     if (i <= 20){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
                         i++;
-                        fetchLatestMedia(callback); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
+                        fetchLatestMedia(callback, startTime); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
                     } else if (i <= 40) { // Around 99.97 % chance to work if correct.
                         i++;
                         initializeCamera();
@@ -176,7 +189,7 @@ public class CameraScanner {
 
     // MediaFile mediaFile: Den bildfil som ska hämtas och skannas.
     // QRCodeScanCallback callback: Callback som används för att returnera resultatet av QR-kodsskanningen.
-    private void fetchThumbnailAndDecode(final MediaFile mediaFile, final QRCodeScanCallback callback) {
+    private void fetchThumbnailAndDecode(final MediaFile mediaFile, final QRCodeScanCallback callback, final long startTime) {
         mediaFile.fetchPreview(new CommonCallbacks.CompletionCallback() {
             @Override
             public void onResult(DJIError djiError) {
@@ -185,6 +198,9 @@ public class CameraScanner {
                     if (bitmap != null && bitmap.getWidth() > 0 && bitmap.getHeight() > 0) {
                         String result = decodeQRCode(bitmap);
                         if (result != null && !result.isEmpty()) {
+                            long endTime = System.currentTimeMillis();
+                            long timeTaken = endTime - startTime;
+                            logger.log("Time taken to fetchThumbnailAndDecode: " + timeTaken + " ms");
                             callback.onQRCodeScanResult(result);
                         } else {
                             Log.e("CameraScanner", "Bitmap is null");
