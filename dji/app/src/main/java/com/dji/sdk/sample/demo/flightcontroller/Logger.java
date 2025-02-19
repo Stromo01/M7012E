@@ -3,6 +3,7 @@ package com.dji.sdk.sample.demo.flightcontroller;
 import android.os.Environment;
 import android.util.Log;
 
+import com.dji.sdk.sample.internal.api.MqttDataStore;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 
 import java.io.File;
@@ -11,6 +12,14 @@ import java.io.IOException;
 
 public class Logger {
     private File logFile;
+    private static Logger instance;
+
+    public static synchronized Logger getInstance() {
+        if (instance == null) {
+            instance = new Logger();
+        }
+        return instance;
+    }
     public Logger(){
         File logDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "M7012E");
         if (!logDir.exists()) {

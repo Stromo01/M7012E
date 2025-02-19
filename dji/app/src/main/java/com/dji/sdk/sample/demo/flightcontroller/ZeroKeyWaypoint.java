@@ -60,7 +60,7 @@ public class ZeroKeyWaypoint {
     public ZeroKeyWaypoint(Context context){
         try {
             this.context = context;
-            logger=new Logger();
+            logger= Logger.getInstance();
             current_pos = new float[]{0, 0, 0};
             server = new WebserverRequestHandler();
             server.startMQTTFlow(context);

@@ -108,10 +108,10 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="15dp"
         android:background="@drawable/round_btn"
-        android:text="Register APP for LDM"
+        android:text="Test MQTT"
         android:textAllCaps="false"
         android:textColor="@color/common_text_color"
-        android:textSize="15dp"/>
+        android:textSize="15dp" />
 
     <Button
         android:id="@+id/btn_open"

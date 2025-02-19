@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.dji.sdk.sample.demo.flightcontroller.Logger;
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -32,26 +33,26 @@ public class WebserverRequestHandler {
     private static final String TOPIC = "Drone";
 
     private String BROKER = "tcp://192.168.137.1";
-    private ZeroKeyWaypoint zeroKeyWaypoint;
+    private Logger logger;
     private MqttAndroidClient client;
 
 
     public void startMQTTFlow(Context context) {
         try {
-            zeroKeyWaypoint = new ZeroKeyWaypoint(context);
+            logger = Logger.getInstance();
         } catch (Exception e) {//Will always throw error if drone is not connected
 
         }
 
         try {
             CLIENT_ID=MqttClient.generateClientId();
-            zeroKeyWaypoint.logger.log("Client id : " + CLIENT_ID);
+            logger.log("Client id : " + CLIENT_ID);
             client = new MqttAndroidClient(context, BROKER, CLIENT_ID);
             connect();
-            zeroKeyWaypoint.logger.log("End of MQTT flow");
+            logger.log("End of MQTT flow");
         }
         catch(Exception e) {
-            zeroKeyWaypoint.logger.log("Error: " + e);
+            logger.log("Error: " + e);
             ToastUtils.setResultToToast("Error: " + e);
 
         }
@@ -61,11 +62,11 @@ public class WebserverRequestHandler {
 
         try {
             client.subscribe(TOPIC, 0);
-            zeroKeyWaypoint.logger.log("Subscribed to topic: " + TOPIC);
+            logger.log("Subscribed to topic: " + TOPIC);
             client.setCallback(new MqttCallback() {
                 @Override
                 public void connectionLost(Throwable cause) {
-                    zeroKeyWaypoint.logger.log("Connection lost: " + cause.getMessage());
+                    logger.log("Connection lost: " + cause.getMessage());
                     ToastUtils.setResultToToast("Connection lost: " + cause.getMessage());
                 }
 
@@ -101,25 +102,25 @@ public class WebserverRequestHandler {
                             }
 
                         } catch (Exception e) {
-                            zeroKeyWaypoint.logger.log("ERROR:" +e.getMessage());
+                            logger.log("ERROR:" +e.getMessage());
                             System.out.println("Failed to parse JSON: " + e.getMessage());
                         }
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        zeroKeyWaypoint.logger.log("Failed to parse JSON: " + e.getMessage());
+                        logger.log("Failed to parse JSON: " + e.getMessage());
                     }
                 }
 
                 @Override
                 public void deliveryComplete(IMqttDeliveryToken token) {
-                    zeroKeyWaypoint.logger.log("Message delivered successfully!");
+                    logger.log("Message delivered successfully!");
                     ToastUtils.setResultToToast("Message delivered successfully!");
                 }
             });
         }
         catch (MqttException e) {
-            zeroKeyWaypoint.logger.log("Error subscribing to topic: " + e);
+            logger.log("Error subscribing to topic: " + e);
             ToastUtils.setResultToToast("Error subscribing to topic: " + e);
         }
     }
@@ -130,20 +131,20 @@ public class WebserverRequestHandler {
             token.setActionCallback(new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    zeroKeyWaypoint.logger.log("Connected to broker.");
+                    logger.log("Connected to broker.");
                     ToastUtils.setResultToToast("Connected to broker.");
                     sub();
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    zeroKeyWaypoint.logger.log("Failed to connect to broker: " + exception);
+                    logger.log("Failed to connect to broker: " + exception);
                     ToastUtils.setResultToToast("Failed to connect to broker: " + exception.getMessage());
                 }
             });
         }
         catch (MqttException e) {
-            zeroKeyWaypoint.logger.log("Error connecting to broker: " + e);
+            logger.log("Error connecting to broker: " + e);
             ToastUtils.setResultToToast("Error connecting to broker: " + e);
         }
 

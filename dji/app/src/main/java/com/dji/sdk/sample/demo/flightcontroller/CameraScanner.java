@@ -65,7 +65,8 @@ public class CameraScanner {
     }
     // Kollar om kamera är tillgänglig
     private void initializeCamera() {
-        logger = new Logger();
+        logger = Logger.getInstance();
+        logger.log("logger initialized");
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             // Hämtar kameran från drönaren och kontrollerar att den inte är null
             camera = DJISampleApplication.getAircraftInstance().getCamera();
