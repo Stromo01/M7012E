@@ -84,6 +84,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private Logger logger;
 
+    CameraScanner cameraScanner = new CameraScanner();
+
     public VirtualStickView(Context context) {
         super(context);
         init(context);
@@ -296,10 +298,13 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
                 break;
             case R.id.btn_yaw_control_mode:
-                CameraScanner cameraScanner = new CameraScanner();
+                long startTime = System.currentTimeMillis();
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
                     public void onQRCodeScanResult(String result) {
+                        long endTime = System.currentTimeMillis();
+                        long duration = endTime - startTime;
+                        logger.log("QR code scan duration: " + duration + " ms");
                         if (result != null) {
                             logger.log("Qrcode result: " + result);
                         } else {
