@@ -17,6 +17,7 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.RGBLuminanceSource;
 import dji.common.camera.SettingsDefinitions;
+import dji.common.error.DJICameraError;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.camera.Camera;
@@ -56,9 +57,12 @@ public class CameraScanner {
 
 
     private Logger logger;
+
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
     private int i = 0;
+
+    private int count = 0;
 
     public CameraScanner() { // add
         initializeCamera();  // sätta upp kameran
@@ -122,13 +126,15 @@ public class CameraScanner {
 
         camera.startShootPhoto(djiError -> {
             if (djiError == null) {
+
                 long endTime = System.currentTimeMillis();
                 long time = (endTime - startTime);
                 logger.log("Time taken: " + time);
                 Log.d("CameraScanner", "Photo taken successfully");
                 i = 0;
                 long newStartTime = System.currentTimeMillis();
-                fetchLatestMedia(callback, newStartTime);
+                count++;
+                //fetchLatestMedia(callback, newStartTime);
             } else {
                 if (i < 10) {
                     i++;
@@ -146,9 +152,9 @@ public class CameraScanner {
         });
     }
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
-    private void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
+    public void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
         logger.log("state: " +  mediaManager.getInternalStorageFileListState());
-        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
+        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
 
             @Override
             public void onResult(DJIError djiError) {
@@ -163,13 +169,16 @@ public class CameraScanner {
 
 
                     if (mediaFiles != null && !mediaFiles.isEmpty()) {
-                        MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
-                        i = 0;
-                        long endTime = System.currentTimeMillis();
-                        long timeTaken = endTime - startTime;
-                        logger.log("Time taken to fetchLatestMedia: " + timeTaken + " ms");
-                        long newStartTime = System.currentTimeMillis();
-                        fetchThumbnailAndDecode(latestMediaFile, callback, newStartTime);
+                        for (int j = 1; j <= count; j++) {
+                            MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
+
+                            i = 0;
+                            long endTime = System.currentTimeMillis();
+                            long timeTaken = endTime - startTime;
+                            logger.log("Time taken to fetchLatestMedia: " + timeTaken + " ms");
+                            long newStartTime = System.currentTimeMillis();
+                            fetchThumbnailAndDecode(latestMediaFile, callback, newStartTime);
+                        }
 
                     } else {
                         i = 0;
@@ -250,9 +259,19 @@ public class CameraScanner {
                     i = 0;
                     return "null row 159";
                 }
+
+            }
+            public QRCodeScanCallback getCallback() {
+                return new QRCodeScanCallback() {
+                    @Override
+                    public void onQRCodeScanResult(String result) {
+                        logger.log("CameraScanner QR code scan result: " + result);
+                    }
+                };
             }
 
     public interface QRCodeScanCallback {
         void onQRCodeScanResult(String result);
+
     }
 }

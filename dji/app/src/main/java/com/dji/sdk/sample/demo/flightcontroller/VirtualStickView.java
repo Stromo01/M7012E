@@ -290,12 +290,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 break;
 
             case R.id.btn_roll_pitch_control_mode:
-                if (flightController.getRollPitchControlMode() == RollPitchControlMode.VELOCITY) {
-                    flightController.setRollPitchControlMode(RollPitchControlMode.ANGLE);
-                } else {
-                    flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-                }
-                ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
+                cameraScanner.fetchLatestMedia(cameraScanner.getCallback(), System.currentTimeMillis());
                 break;
             case R.id.btn_yaw_control_mode:
                 long startTime = System.currentTimeMillis();
