@@ -111,6 +111,7 @@ public class CameraScanner {
 
 
     public void scanQRCode(final QRCodeScanCallback callback) {
+
         long startTime = System.currentTimeMillis();
         if (camera == null || mediaManager == null) {
             Log.e("CameraScanner", "Camera or MediaManager not initialized");
@@ -118,6 +119,7 @@ public class CameraScanner {
             i = 0;
             return;
         }
+
         camera.startShootPhoto(djiError -> {
             if (djiError == null) {
                 long endTime = System.currentTimeMillis();
@@ -145,13 +147,20 @@ public class CameraScanner {
     }
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
     private void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
+        logger.log("state: " +  mediaManager.getInternalStorageFileListState());
         mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
 
             @Override
             public void onResult(DJIError djiError) {
 
                 if (djiError == null) {
+
+
+                    long startTimeTest = System.currentTimeMillis();
                     List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
+                    long endTimeTest = System.currentTimeMillis();
+                    logger.log("Time taken to fetchLatestMedia: " + (endTimeTest - startTimeTest) + " ms");
+
 
                     if (mediaFiles != null && !mediaFiles.isEmpty()) {
                         MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
@@ -171,6 +180,7 @@ public class CameraScanner {
                 } else {
                     if (i <= 20){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
                         i++;
+                        logger.log("loop: " + i);
                         fetchLatestMedia(callback, startTime); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
                     } else if (i <= 40) { // Around 99.97 % chance to work if correct.
                         i++;
