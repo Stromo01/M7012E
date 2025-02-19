@@ -77,6 +77,31 @@ public class ZeroKeyWaypoint {
         flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
         flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
     }
+    public float[] goToWaypoint(){
+        try {
+            current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
+            current_pos = MqttDataStore.getInstance().getPosition();
+            float[] distance = calculateDistance(current_pos, waypoint_pos);
+            float height = calculateHeight(current_pos, waypoint_pos);
+            if (!isLookingAtWaypoint){
+                yaw = yawToWaypoint();//Turn the drone to face the waypoint first
+            }
+            else{
+                yaw = yawToWaypoint();//Yaw movement
+                throttle = throttleToWaypoint(height);//Vertical movement
+                pitch = pitchToWaypoint(distance);//Forward movement
+            }
+            //yawToBox();
+            return new float[]{pitch, throttle, yaw};
+
+        }
+        catch (Exception e){
+            logger.log("Error in goToWaypoint: " + e.getMessage());
+            Log.e(TAG, "Error in goToWaypoint", e);
+        }
+        return new float[]{pitch, throttle, yaw};
+    }
+
     public boolean haveArrived(){ //Check if drone is within specified accuracy of waypoint
         float[] distance = calculateDistance(current_pos, waypoint_pos);
         logger.log("calculateDistance "+distance[0]+", "+distance[1]);
@@ -105,32 +130,6 @@ public class ZeroKeyWaypoint {
             return false;
         }
     }
-
-    public float[] goToWaypoint(){
-        try {
-            current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
-            current_pos = MqttDataStore.getInstance().getPosition();
-            float[] distance = calculateDistance(current_pos, waypoint_pos);
-            float height = calculateHeight(current_pos, waypoint_pos);
-            if (!isLookingAtWaypoint){
-                yaw = yawToWaypoint();//Turn the drone to face the waypoint first
-            }
-            else{
-                yaw = yawToWaypoint();//Yaw movement
-                throttle = throttleToWaypoint(height);//Vertical movement
-                pitch = pitchToWaypoint(distance);//Forward movement
-            }
-            //yawToBox();
-            return new float[]{pitch, throttle, yaw};
-
-        }
-        catch (Exception e){
-            logger.log("Error in goToWaypoint: " + e.getMessage());
-            Log.e(TAG, "Error in goToWaypoint", e);
-        }
-        return new float[]{pitch, throttle, yaw};
-    }
-
 
     private float yawToWaypoint(){
         double angleToWaypoint = calculateAngle(current_angle, waypoint_pos, current_pos);
@@ -219,6 +218,8 @@ public class ZeroKeyWaypoint {
     private float calculateHeight(float[] current_pos, float[] waypoint_pos) {
         return waypoint_pos[2] - current_pos[2];
     }
+
+
     class Item {
         int id;
         float position;
