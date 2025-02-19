@@ -148,7 +148,7 @@ public class CameraScanner {
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
     private void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
         logger.log("state: " +  mediaManager.getInternalStorageFileListState());
-        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
+        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.SDCARD, new CommonCallbacks.CompletionCallback() {
 
             @Override
             public void onResult(DJIError djiError) {
