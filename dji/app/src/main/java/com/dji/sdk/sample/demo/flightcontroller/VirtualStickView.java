@@ -82,6 +82,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private ZeroKeyWaypoint zeroKey;
 
+    private Logger logger;
+
     public VirtualStickView(Context context) {
         super(context);
         init(context);
@@ -142,6 +144,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
         }
         isSimulatorActived = simulator.isSimulatorActive();
         zeroKey = new ZeroKeyWaypoint(getContext());
+        logger = new Logger();
 
     }
 
@@ -300,9 +303,9 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                     @Override
                     public void onQRCodeScanResult(String result) {
                         if (result != null) {
-                            zeroKey.logToFile("Qrcode result: " + result);
+                            logger.log("Qrcode result: " + result);
                         } else {
-                            zeroKey.logToFile("Qrcode scan failed");
+                            logger.log("Qrcode scan failed");
                         }
                     }
                 });
@@ -375,9 +378,9 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                     @Override
                                     public void onQRCodeScanResult(String result) {
                                         if (result != null) {
-                                            zeroKey.logToFile("Qrcode result: " + result);
+                                            logger.log("Qrcode result: " + result);
                                         } else {
-                                            zeroKey.logToFile("Qrcode scan failed");
+                                            logger.log("Qrcode scan failed");
                                         }
                                         zeroKey.nextWaypoint();
                                         scheduleNextRun();
@@ -395,7 +398,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                         }
 
                         private void handleLanding() {
-                            zeroKey.logToFile("Land");
+                            logger.log("Land");
                             flightController.startLanding(djiError -> DialogUtils.showDialogBasedOnError(getContext(), djiError));
                             if (flightcontrollerState.isLandingConfirmationNeeded()) {
                                 flightController.confirmLanding(djiError -> DialogUtils.showDialogBasedOnError(getContext(), djiError));
@@ -415,7 +418,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                         sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
                                     } catch (IllegalStateException e) {
                                         ToastUtils.setResultToToast("Error scheduling task: " + e.getMessage());
-                                        zeroKey.logToFile("Error scheduling task: " + e.getMessage());
+                                        logger.log("Error scheduling task: " + e.getMessage());
                                     }
                                 }
                             }
@@ -433,7 +436,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                     handler.post(updateValuesRunnable);
                 }catch (Exception e){
                     ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
-                    zeroKey.logToFile("Error in takeoff: " + e.getMessage());
+                    logger.log("Error in takeoff: " + e.getMessage());
                 }
                 break;
             default:

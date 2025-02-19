@@ -47,33 +47,26 @@ public class ZeroKeyWaypoint {
     private boolean isLookingAtBox;
     private boolean isLookingAtWaypoint;
     private final float waypointAccuracy = 0.1f;//meters
-    private final float heightThrottle=1f; //m/s
-    private final float pitchVelocity=1f; //m/s
+    private final float heightThrottle=0.1f; //m/s
+    private final float pitchVelocity=0.1f; //m/s
     private final float yawVelocity=90f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
-    private File logFile;
+    private Logger logger;
+
 
     public ZeroKeyWaypoint(Context context){
         try {
             this.context = context;
-            initLogToFile();
+            logger=new Logger();
             current_pos = new float[]{0, 0, 0};//TODO: Remove this temporary position for test
             initFlightController();
             String path = "app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/waypoints.csv";
             loadWaypointsFromCSV(new File(context.getFilesDir(), "waypoints.csv").getAbsolutePath());
             nextWaypoint();
         } catch (Exception e) {
-            logToFile("Error initializing ZeroKeyWaypoint" + e.getMessage());
+            logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());
             Log.e(TAG, "Error initializing ZeroKeyWaypoint", e);
         };
-    }
-    private void initLogToFile(){
-        File logDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "M7012E");
-        if (!logDir.exists()) {
-            logDir.mkdirs();
-        }
-        logFile = new File(logDir, "ZeroKeyWaypointLog"+System.currentTimeMillis()+".txt");
-        logToFile("ZeroKeyWaypoint constructor called");
     }
     private void initFlightController(){
         flightController = DJISampleApplication.getAircraftInstance().getFlightController();
@@ -83,29 +76,29 @@ public class ZeroKeyWaypoint {
     }
     public boolean haveArrived(){ //Check if drone is within specified accuracy of waypoint
         float[] distance = calculateDistance(current_pos, waypoint_pos);
-        logToFile("calculateDistance "+distance[0]+", "+distance[1]);
+        logger.log("calculateDistance "+distance[0]+", "+distance[1]);
         float height = calculateHeight(current_pos, waypoint_pos);
-        logToFile("calculateHeight "+height);
+        logger.log("calculateHeight "+height);
         if (distance[0] < waypointAccuracy && distance[1] < waypointAccuracy && height < waypointAccuracy){
-            logToFile("Arrived at waypoint");
+            logger.log("Arrived at waypoint");
             return true;
         }
         else{
-            logToFile("Not arrived at waypoint");
+            logger.log("Not arrived at waypoint");
             return false;
         }
     }
     public boolean nextWaypoint() { //Set next waypoint as current waypoint
-        logToFile("nextWaypoint called with " + waypoints.size() + " waypoints");
+        logger.log("nextWaypoint called with " + waypoints.size() + " waypoints");
         if (waypoints.size() > 1) {
             waypoint_pos = waypoints.remove(0);
             isLookingAtWaypoint = false;
-            logToFile("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
+            logger.log("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
             ToastUtils.setResultToToast("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
             return true;
         }
         else{
-            logToFile("No more waypoints");
+            logger.log("No more waypoints");
             return false;
         }
     }
@@ -129,7 +122,7 @@ public class ZeroKeyWaypoint {
 
         }
         catch (Exception e){
-            logToFile("Error in goToWaypoint: " + e.getMessage());
+            logger.log("Error in goToWaypoint: " + e.getMessage());
             Log.e(TAG, "Error in goToWaypoint", e);
         }
         return new float[]{pitch, throttle, yaw};
@@ -140,7 +133,7 @@ public class ZeroKeyWaypoint {
         double angleToWaypoint = calculateAngle(current_angle, waypoint_pos, current_pos);
         if (current_angle==angleToWaypoint){//If already at angle
             isLookingAtWaypoint=true;
-            logToFile("Yaw to waypoint: Already at angle");
+            logger.log("Yaw to waypoint: Already at angle");
             return 0f;
         }
         else{//Yaw to waypoint//TODO: Check if this is correct
@@ -181,7 +174,7 @@ public class ZeroKeyWaypoint {
         float angleToBox = 3f;//calculateYawFromQuaternion(zeroKey.getWaypointAngle());//TODO: Implement this
         isLookingAtBox=false;
         if (current_angle==angleToBox){//If already at angle
-            logToFile("Yaw to box: Already at angle");
+            logger.log("Yaw to box: Already at angle");
             isLookingAtBox=true;
             return 0f;
         }
@@ -257,7 +250,7 @@ public class ZeroKeyWaypoint {
 
                 // Create item object and add to list
                 itemList.add(new Item(id, position, angle));
-                logToFile("waypoints"+ itemList);
+                logger.log("waypoints"+ itemList);
             }
 
         } catch (Exception e) {
@@ -268,12 +261,12 @@ public class ZeroKeyWaypoint {
 
 
         /*
-        logToFile("loadWaypointsFromCSV called");
+        logger.log("loadWaypointsFromCSV called");
         File file_waypoints = new File(filePath);
         if (!file_waypoints.exists()) {
-            logToFile("File does not exist: " + file_waypoints.getAbsolutePath());
+            logger.log("File does not exist: " + file_waypoints.getAbsolutePath());
             File files = new File(".");
-            logToFile("list: " + Arrays.toString(files.list()));
+            logger.log("list: " + Arrays.toString(files.list()));
             return;
         }
         try{
@@ -292,32 +285,22 @@ public class ZeroKeyWaypoint {
         /*
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            logToFile("Reading waypoints from file");
+            logger.log("Reading waypoints from file");
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
                 int[] pos = new int[3];
                 pos[0] = Integer.parseInt(values[0]);
                 pos[1] = Integer.parseInt(values[1]);
                 pos[2] = Integer.parseInt(values[2]);
-                logToFile("Waypoint loaded: " + pos[0] + ", " + pos[1] + ", " + pos[2]);
+                logger.log("Waypoint loaded: " + pos[0] + ", " + pos[1] + ", " + pos[2]);
                 setWaypoint(pos);
             }
         } catch (Exception e) {
-            logToFile("Error reading waypoints from file: " + e.getMessage());
+            logger.log("Error reading waypoints from file: " + e.getMessage());
         }
         */
-        setWaypoint(new float[]{0, 3, 0});
-        setWaypoint(new float[]{3, 3, 0});
-        setWaypoint(new float[]{3, 3, 0});
-        setWaypoint(new float[]{3, -3, 0});
+        setWaypoint(new float[]{3, -1, 2});
 
-    }
-    public void logToFile(String message) {
-        try (FileOutputStream fos = new FileOutputStream(logFile, true)) {
-            fos.write((message + "\n").getBytes());
-        } catch (IOException e) {
-            Log.e(TAG, "Error writing to log file", e);
-        }
     }
     public ArrayList<float[]> getWaypoints(){
         return waypoints;

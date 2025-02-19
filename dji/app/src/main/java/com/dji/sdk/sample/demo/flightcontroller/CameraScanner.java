@@ -54,7 +54,8 @@ public class CameraScanner {
 
     private Camera camera;
 
-    private ZeroKeyWaypoint zeroKey;
+
+    private Logger logger;
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
     private int i = 0;
@@ -64,6 +65,7 @@ public class CameraScanner {
     }
     // Kollar om kamera är tillgänglig
     private void initializeCamera() {
+        logger = new Logger();
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             // Hämtar kameran från drönaren och kontrollerar att den inte är null
             camera = DJISampleApplication.getAircraftInstance().getCamera();
@@ -163,7 +165,7 @@ public class CameraScanner {
                     } else {
                         i = 0;
                         //Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
-                        zeroKey.logToFile("Error refreshing file list: " + djiError.getDescription());
+                        logger.log("Error refreshing file list: " + djiError.getDescription());
                         callback.onQRCodeScanResult("null - Error refreshing file list");
                     }
                 }
@@ -215,9 +217,9 @@ public class CameraScanner {
                 } catch (Exception e) {
                     String errorMessage = "Error decoding QR code: " + e.getMessage();
                     Log.e("CameraScanner", "errordecoding" + e.getMessage());
-                    zeroKey.logToFile(errorMessage);
-                    zeroKey.logToFile("Bitmap width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
-                    zeroKey.logToFile("errordecoding" + e.getMessage());
+                    logger.log(errorMessage);
+                    logger.log("Bitmap width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
+                    logger.log("errordecoding" + e.getMessage());
                     i = 0;
                     return "null row 159";
                 }
