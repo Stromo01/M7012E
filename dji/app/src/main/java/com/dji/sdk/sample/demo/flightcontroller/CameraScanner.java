@@ -114,7 +114,7 @@ public class CameraScanner {
 
 
 
-    public void scanQRCode(final QRCodeScanCallback callback) {
+    public void scanQRCode(final QRCodeScanCallback callback) { // Takes a image and stores it in the local memory on the drone. Each image is counted by count
 
         long startTime = System.currentTimeMillis();
         if (camera == null || mediaManager == null) {
@@ -134,11 +134,9 @@ public class CameraScanner {
                 i = 0;
                 long newStartTime = System.currentTimeMillis();
                 count++;
-                //fetchLatestMedia(callback, newStartTime);
             } else {
                 if (i < 10) {
                     i++;
-                    //initializeCamera();
                     scanQRCode(callback);
                 }
                 else {
@@ -152,9 +150,9 @@ public class CameraScanner {
         });
     }
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
-    public void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
+    public void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) { // Fetches the latest images from the drone and decodes it.
         logger.log("state: " +  mediaManager.getInternalStorageFileListState());
-        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
+        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() { // This function takes time so we only run it once.
 
             @Override
             public void onResult(DJIError djiError) {
@@ -170,8 +168,7 @@ public class CameraScanner {
 
                     if (mediaFiles != null && !mediaFiles.isEmpty()) {
                         for (int j = 1; j <= count; j++) {
-                            MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
-
+                            MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - j); // Gets the latest image starting from the latest to (latest - j).
                             i = 0;
                             long endTime = System.currentTimeMillis();
                             long timeTaken = endTime - startTime;
@@ -179,6 +176,7 @@ public class CameraScanner {
                             long newStartTime = System.currentTimeMillis();
                             fetchThumbnailAndDecode(latestMediaFile, callback, newStartTime);
                         }
+                        count = 0;
 
                     } else {
                         i = 0;
@@ -187,15 +185,13 @@ public class CameraScanner {
                     }
 
                 } else {
-                    if (i <= 20){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
+                    if (i <= 15){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
                         i++;
                         logger.log("loop: " + i);
-                        fetchLatestMedia(callback, startTime); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
-                    } else if (i <= 40) { // Around 99.97 % chance to work if correct.
-                        i++;
-                        initializeCamera();
-                        scanQRCode(callback);
-                    } else {
+                        fetchLatestMedia(callback, startTime); // We migth want to remove this and just return an error.
+                    }
+
+                    else {
                         i = 0;
                         //Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
                         logger.log("Error refreshing file list: " + djiError.getDescription());
