@@ -330,6 +330,10 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
+                flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
+                flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
+                flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
+
                 zeroKey = new ZeroKeyWaypoint(getContext());
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { //Take off
                     @Override

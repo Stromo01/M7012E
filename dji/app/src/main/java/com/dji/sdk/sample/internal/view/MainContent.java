@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.bluetooth.BluetoothView;
+import com.dji.sdk.sample.demo.flightcontroller.CameraScanner;
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -43,7 +44,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
 import dji.common.realname.AppActivationState;
@@ -189,19 +189,10 @@ public class MainContent extends RelativeLayout {
         getmBtnRegisterAppForLDM.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                isregisterForLDM = true;
-                /*WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
+                //isregisterForLDM = true;
+                WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
                 try{
                     webserverRequestHandler.startMQTTFlow(getContext());
-                } catch (Exception e) {
-                    ToastUtils.setResultToToast("Error: " + e);
-                }
-            }
-        });*/
-
-                ZeroKeyWaypoint zeroKeyWaypoint = new ZeroKeyWaypoint(getContext());
-                try {
-                    zeroKeyWaypoint.setWaypointZeroKey();
                 } catch (Exception e) {
                     ToastUtils.setResultToToast("Error: " + e);
                 }
@@ -217,19 +208,44 @@ public class MainContent extends RelativeLayout {
             }
         });
         mBtnBluetooth.setOnClickListener(new OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 if (GeneralUtils.isFastDoubleClick()) {
                     return;
                 }
-                if (DJISampleApplication.getBluetoothProductConnector() == null) {
-                    ToastUtils.setResultToToast("pls wait the sdk initiation finished");
-                    return;
-                }
-                bluetoothView =
-                        new ViewWrapper(new BluetoothView(getContext()), R.string.component_listview_bluetooth);
-                DJISampleApplication.getEventBus().post(bluetoothView);
-            }
+                ZeroKeyWaypoint zeroKey = new ZeroKeyWaypoint(getContext());
+                zeroKey.setWaypoint(new float[]{3, 2, 3});
+                Handler handler = new Handler(Looper.getMainLooper());
+                Runnable updateValuesRunnable = new Runnable() {
+                    @Override
+                    public void run() { //Run method that runs in a loop until all waypoints are visited
+                        handleWaypointNavigation();
+                    }
+
+                    private void handleWaypointNavigation() {
+                           /* if (zeroKey.getWaypoints().isEmpty()) {//No more waypoints, land
+                                handleLanding();
+                            }
+                            else */
+                        try {
+                            float[] values = zeroKey.goToWaypoint();
+                            scheduleNextRun();
+                        } catch (Exception e) {
+                            ToastUtils.setResultToToast("Error in waypoint navigation: " + e.getMessage());
+                        }
+                    }
+                    private void scheduleNextRun() {
+                        Handler handler = new Handler(Looper.getMainLooper());
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                handleWaypointNavigation();
+                            }
+                        }, 200);
+                    }
+            };
+        };
         });
         mBridgeModeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override

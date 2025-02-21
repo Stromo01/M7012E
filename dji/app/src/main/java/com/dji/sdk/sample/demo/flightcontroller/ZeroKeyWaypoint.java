@@ -66,23 +66,20 @@ public class ZeroKeyWaypoint {
             current_pos = new float[]{0, 0, 0};
             server = new WebserverRequestHandler();
             server.startMQTTFlow(context);
-            initFlightController();
-            loadWaypointsFromCSV();
-            nextWaypoint();
+            //loadWaypointsFromCSV();
+            //nextWaypoint();
         } catch (Exception e) {
             logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());
         };
     }
-    private void initFlightController(){
-        flightController = DJISampleApplication.getAircraftInstance().getFlightController();
-        flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
-        flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
-        flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
-    }
+
     public float[] goToWaypoint(){
         try {
+            logger.log("mqtt: " +MqttDataStore.getInstance());
+            logger.log("curpos: " + Arrays.toString(MqttDataStore.getInstance().getPosition()));
             current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
             current_pos = MqttDataStore.getInstance().getPosition();
+
             float[] distance = calculateDistance(current_pos, waypoint_pos);
             float height = calculateHeight(current_pos, waypoint_pos);
             if (!isLookingAtWaypoint){
@@ -120,7 +117,7 @@ public class ZeroKeyWaypoint {
     }
     public boolean nextWaypoint() { //Set next waypoint as current waypoint
         logger.log("nextWaypoint called with " + waypoints.size() + " waypoints");
-        if (waypoints.size() > 1) {
+        if (!waypoints.isEmpty()) {
             waypoint_pos = waypoints.remove(0);
             isLookingAtWaypoint = false;
             logger.log("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
