@@ -266,40 +266,7 @@ public class ZeroKeyWaypoint {
         //setWaypoint(new float[]{3, -1, 2});
 
     }
-    public void setWaypointZeroKey() {
-        Path path = Paths.get("app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/waypoints.json");
-        float[] cur_pos = MqttDataStore.getInstance().getPosition(); // Your float position
 
-        try {
-            JSONArray jsonArray;
-
-
-            if (Files.exists(path)) {
-                String content = new String(Files.readAllBytes(path));
-                if (!content.trim().isEmpty()) {
-                    jsonArray = new JSONArray(content);
-                } else {
-                    jsonArray = new JSONArray();
-                }
-            } else {
-                jsonArray = new JSONArray(); // Create new if file doesn't exist
-            }
-
-            // Convert float array to JSONArray
-            JSONArray positionArray = new JSONArray();
-            for (float pos : cur_pos) {
-                positionArray.put(pos);
-            }
-
-            jsonArray.put(positionArray); // Append new position array
-
-            // Write back to file
-            Files.write(path, jsonArray.toString(4).getBytes()); // Pretty-print with indentation
-
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
-    }
     public ArrayList<float[]> getWaypoints(){
         return waypoints;
     }

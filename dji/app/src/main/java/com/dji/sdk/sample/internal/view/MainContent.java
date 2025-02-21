@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.bluetooth.BluetoothView;
+import com.dji.sdk.sample.demo.flightcontroller.JsonHandling;
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -199,9 +200,9 @@ public class MainContent extends RelativeLayout {
             }
         });*/
 
-                ZeroKeyWaypoint zeroKeyWaypoint = new ZeroKeyWaypoint(getContext());
+                JsonHandling zeroKeyWaypoint = new JsonHandling();
                 try {
-                    zeroKeyWaypoint.setWaypointZeroKey();
+                    zeroKeyWaypoint.setWaypointZeroKey(getContext());
                 } catch (Exception e) {
                     ToastUtils.setResultToToast("Error: " + e);
                 }
