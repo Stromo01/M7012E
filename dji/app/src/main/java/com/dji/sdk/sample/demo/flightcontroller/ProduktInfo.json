@@ -1,0 +1,303 @@
+[
+  {
+    "id": "001",
+    "name": "Nike Socks",
+    "size": "Medium",
+    "color": "Black"
+  },
+  {
+    "id": "002",
+    "name": "Adidas Shoes",
+    "size": "Large",
+    "color": "White"
+  },
+  {
+    "id": "003",
+    "name": "Puma T-shirt",
+    "size": "Small",
+    "color": "Gray"
+  },
+  {
+    "id": "004",
+    "name": "Reebok Shorts",
+    "size": "Medium",
+    "color": "Red"
+  },
+  {
+    "id": "005",
+    "name": "Under Armour Cap",
+    "size": "One Size",
+    "color": "Blue"
+  },
+  {
+    "id": "006",
+    "name": "New Balance Shoes",
+    "size": "Large",
+    "color": "Green"
+  },
+  {
+    "id": "007",
+    "name": "Asics Socks",
+    "size": "Medium",
+    "color": "Yellow"
+  },
+  {
+    "id": "008",
+    "name": "Skechers Shoes",
+    "size": "Large",
+    "color": "Orange"
+  },
+  {
+    "id": "009",
+    "name": "Converse T-shirt",
+    "size": "Small",
+    "color": "Purple"
+  },
+  {
+    "id": "010",
+    "name": "Vans Shorts",
+    "size": "Medium",
+    "color": "Black"
+  },
+  {
+    "id": "011",
+    "name": "Fila Cap",
+    "size": "One Size",
+    "color": "White"
+  },
+  {
+    "id": "012",
+    "name": "Lacoste Shoes",
+    "size": "Large",
+    "color": "Gray"
+  },
+  {
+    "id": "013",
+    "name": "Tommy Hilfiger Socks",
+    "size": "Medium",
+    "color": "Red"
+  },
+  {
+    "id": "014",
+    "name": "Calvin Klein T-shirt",
+    "size": "Small",
+    "color": "Blue"
+  },
+  {
+    "id": "015",
+    "name": "Hugo Boss Shorts",
+    "size": "Medium",
+    "color": "Green"
+  },
+  {
+    "id": "016",
+    "name": "Gucci Cap",
+    "size": "One Size",
+    "color": "Yellow"
+  },
+  {
+    "id": "017",
+    "name": "Versace Shoes",
+    "size": "Large",
+    "color": "Orange"
+  },
+  {
+    "id": "018",
+    "name": "Armani Socks",
+    "size": "Medium",
+    "color": "Purple"
+  },
+  {
+    "id": "019",
+    "name": "Prada T-shirt",
+    "size": "Small",
+    "color": "Black"
+  },
+  {
+    "id": "020",
+    "name": "Dolce & Gabbana Shorts",
+    "size": "Medium",
+    "color": "White"
+  },
+  {
+    "id": "021",
+    "name": "Chanel Cap",
+    "size": "One Size",
+    "color": "Gray"
+  },
+  {
+    "id": "022",
+    "name": "Louis Vuitton Shoes",
+    "size": "Large",
+    "color": "Red"
+  },
+  {
+    "id": "023",
+    "name": "Burberry Socks",
+    "size": "Medium",
+    "color": "Blue"
+  },
+  {
+    "id": "024",
+    "name": "Balenciaga T-shirt",
+    "size": "Small",
+    "color": "Green"
+  },
+  {
+    "id": "025",
+    "name": "Yves Saint Laurent Shorts",
+    "size": "Medium",
+    "color": "Yellow"
+  },
+  {
+    "id": "026",
+    "name": "Hermès Cap",
+    "size": "One Size",
+    "color": "Orange"
+  },
+  {
+    "id": "027",
+    "name": "Dior Shoes",
+    "size": "Large",
+    "color": "Purple"
+  },
+  {
+    "id": "028",
+    "name": "Givenchy Socks",
+    "size": "Medium",
+    "color": "Black"
+  },
+  {
+    "id": "029",
+    "name": "Chloé T-shirt",
+    "size": "Small",
+    "color": "White"
+  },
+  {
+    "id": "030",
+    "name": "Prabal Gurung Shorts",
+    "size": "Medium",
+    "color": "Gray"
+  },
+  {
+    "id": "031",
+    "name": "Alexander Wang Cap",
+    "size": "One Size",
+    "color": "Red"
+  },
+  {
+    "id": "032",
+    "name": "Jason Wu Shoes",
+    "size": "Large",
+    "color": "Blue"
+  },
+  {
+    "id": "033",
+    "name": "Derek Lam Socks",
+    "size": "Medium",
+    "color": "Green"
+  },
+  {
+    "id": "034",
+    "name": "Diane von Fürstenberg T-shirt",
+    "size": "Small",
+    "color": "Yellow"
+  },
+  {
+    "id": "035",
+    "name": "Anna Sui Shorts",
+    "size": "Medium",
+    "color": "Orange"
+  },
+  {
+    "id": "036",
+    "name": "Vera Wang Cap",
+    "size": "One Size",
+    "color": "Purple"
+  },
+  {
+    "id": "037",
+    "name": "Donna Karan Shoes",
+    "size": "Large",
+    "color": "Black"
+  },
+  {
+    "id": "038",
+    "name": "Zac Posen Socks",
+    "size": "Medium",
+    "color": "White"
+  },
+  {
+    "id": "039",
+    "name": "Michael Kors T-shirt",
+    "size": "Small",
+    "color": "Gray"
+  },
+  {
+    "id": "040",
+    "name": "Oscar de la Renta Shorts",
+    "size": "Medium",
+    "color": "Red"
+  },
+  {
+    "id": "041",
+    "name": "Carolina Herrera Cap",
+    "size": "One Size",
+    "color": "Blue"
+  },
+  {
+    "id": "042",
+    "name": "Ralph Lauren Shoes",
+    "size": "Large",
+    "color": "Green"
+  },
+  {
+    "id": "043",
+    "name": "Marc Jacobs Socks",
+    "size": "Medium",
+    "color": "Yellow"
+  },
+  {
+    "id": "044",
+    "name": "Calvin Klein T-shirt",
+    "size": "Small",
+    "color": "Orange
+  }  ,
+  {
+    "id": "045",
+    "name": "Hugo Boss Shorts",
+    "size": "Medium",
+    "color": "Purple"
+  },
+  {
+    "id": "046",
+    "name": "Gucci Cap",
+    "size": "One Size",
+    "color": "Black"
+  },
+  {
+    "id": "047",
+    "name": "Versace Shoes",
+    "size": "Large",
+    "color": "White"
+  },
+  {
+    "id": "048",
+    "name": "Armani Socks",
+    "size": "Medium",
+    "color": "Gray"
+  },
+  {
+    "id": "049",
+    "name": "Prada T-shirt",
+    "size": "Small",
+    "color": "Red"
+  },
+  {
+    "id": "050",
+    "name": "Dolce & Gabbana Shorts",
+    "size": "Medium",
+    "color": "Blue"
+  }
+]
+

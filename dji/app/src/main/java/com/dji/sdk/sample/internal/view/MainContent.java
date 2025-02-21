@@ -28,6 +28,7 @@ import android.widget.TextView;
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.flightcontroller.CameraScanner;
 import com.dji.sdk.sample.demo.flightcontroller.VirtualStickView;
+import com.dji.sdk.sample.demo.flightcontroller.JsonHandling;
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -193,14 +194,16 @@ public class MainContent extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 //isregisterForLDM = true;
-                WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
-                try{
-                    webserverRequestHandler.startMQTTFlow(getContext());
+                JsonHandling zeroKeyWaypoint = new JsonHandling();
+                try {
+                    zeroKeyWaypoint.setWaypointZeroKey(getContext());
                 } catch (Exception e) {
                     ToastUtils.setResultToToast("Error: " + e);
                 }
             }
         });
+
+
         mBtnOpen.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
