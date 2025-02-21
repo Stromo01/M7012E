@@ -21,7 +21,7 @@ public class InventoryManager {
         // Initialize inventory
     }
 
-    public void submitQrResult(String qrResult) {
+    public void submitQrResult(String qrResult) { // Run this function when a QR code is scanned
         String[] data = readData(qrResult);
         String quantity = data[0];
         String[] productInfo = serchProductInfoWithID(data[1]);
