@@ -17,6 +17,7 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.RGBLuminanceSource;
 import dji.common.camera.SettingsDefinitions;
+import dji.common.error.DJICameraError;
 import dji.common.error.DJIError;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.camera.Camera;
@@ -56,9 +57,12 @@ public class CameraScanner {
 
 
     private Logger logger;
+
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
     private int i = 0;
+
+    private int count = 0;
 
     public CameraScanner() { // add
         initializeCamera();  // sätta upp kameran
@@ -110,7 +114,8 @@ public class CameraScanner {
 
 
 
-    public void scanQRCode(final QRCodeScanCallback callback) {
+    public void scanQRCode(final QRCodeScanCallback callback) { // Takes a image and stores it in the local memory on the drone. Each image is counted by count
+
         long startTime = System.currentTimeMillis();
         if (camera == null || mediaManager == null) {
             Log.e("CameraScanner", "Camera or MediaManager not initialized");
@@ -118,19 +123,20 @@ public class CameraScanner {
             i = 0;
             return;
         }
+
         camera.startShootPhoto(djiError -> {
             if (djiError == null) {
+
                 long endTime = System.currentTimeMillis();
                 long time = (endTime - startTime);
                 logger.log("Time taken: " + time);
                 Log.d("CameraScanner", "Photo taken successfully");
                 i = 0;
                 long newStartTime = System.currentTimeMillis();
-                fetchLatestMedia(callback, newStartTime);
+                count++;
             } else {
                 if (i < 10) {
                     i++;
-                    //initializeCamera();
                     scanQRCode(callback);
                 }
                 else {
@@ -144,23 +150,33 @@ public class CameraScanner {
         });
     }
     // Tar emot ett QRCodeScanCallback objekt för att returnera resultatet av QR-kodsskanningen
-    private void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) {
-        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() {
+    public void fetchLatestMedia(final QRCodeScanCallback callback, final long startTime) { // Fetches the latest images from the drone and decodes it.
+        logger.log("state: " +  mediaManager.getInternalStorageFileListState());
+        mediaManager.refreshFileListOfStorageLocation(SettingsDefinitions.StorageLocation.INTERNAL_STORAGE, new CommonCallbacks.CompletionCallback() { // This function takes time so we only run it once.
 
             @Override
             public void onResult(DJIError djiError) {
 
                 if (djiError == null) {
+
+
+                    long startTimeTest = System.currentTimeMillis();
                     List<MediaFile> mediaFiles = mediaManager.getInternalStorageFileListSnapshot();
+                    long endTimeTest = System.currentTimeMillis();
+                    logger.log("Time taken to fetchLatestMedia: " + (endTimeTest - startTimeTest) + " ms");
+
 
                     if (mediaFiles != null && !mediaFiles.isEmpty()) {
-                        MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - 1);
-                        i = 0;
-                        long endTime = System.currentTimeMillis();
-                        long timeTaken = endTime - startTime;
-                        logger.log("Time taken to fetchLatestMedia: " + timeTaken + " ms");
-                        long newStartTime = System.currentTimeMillis();
-                        fetchThumbnailAndDecode(latestMediaFile, callback, newStartTime);
+                        for (int j = 1; j <= count; j++) {
+                            MediaFile latestMediaFile = mediaFiles.get(mediaFiles.size() - j); // Gets the latest image starting from the latest to (latest - j).
+                            i = 0;
+                            long endTime = System.currentTimeMillis();
+                            long timeTaken = endTime - startTime;
+                            logger.log("Time taken to fetchLatestMedia: " + timeTaken + " ms");
+                            long newStartTime = System.currentTimeMillis();
+                            fetchThumbnailAndDecode(latestMediaFile, callback, newStartTime);
+                        }
+                        count = 0;
 
                     } else {
                         i = 0;
@@ -169,14 +185,13 @@ public class CameraScanner {
                     }
 
                 } else {
-                    if (i <= 20){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
+                    if (i <= 15){ // Around 99.97 % chance to work if we take 15 images with 33 % chance for one image to work.
                         i++;
-                        fetchLatestMedia(callback, startTime); // If this doesn't solve the problem run the entire image process instead. (scanQRCode())
-                    } else if (i <= 40) { // Around 99.97 % chance to work if correct.
-                        i++;
-                        initializeCamera();
-                        scanQRCode(callback);
-                    } else {
+                        logger.log("loop: " + i);
+                        fetchLatestMedia(callback, startTime); // We migth want to remove this and just return an error.
+                    }
+
+                    else {
                         i = 0;
                         //Log.e("CameraScanner", "Error refreshing file list: " + djiError.getDescription());
                         logger.log("Error refreshing file list: " + djiError.getDescription());
@@ -240,9 +255,19 @@ public class CameraScanner {
                     i = 0;
                     return "null row 159";
                 }
+
+            }
+            public QRCodeScanCallback getCallback() {
+                return new QRCodeScanCallback() {
+                    @Override
+                    public void onQRCodeScanResult(String result) {
+                        logger.log("CameraScanner QR code scan result: " + result);
+                    }
+                };
             }
 
     public interface QRCodeScanCallback {
         void onQRCodeScanResult(String result);
+
     }
 }

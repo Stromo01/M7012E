@@ -289,15 +289,10 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 });
                 break;
 
-            case R.id.btn_roll_pitch_control_mode:
-                if (flightController.getRollPitchControlMode() == RollPitchControlMode.VELOCITY) {
-                    flightController.setRollPitchControlMode(RollPitchControlMode.ANGLE);
-                } else {
-                    flightController.setRollPitchControlMode(RollPitchControlMode.VELOCITY);
-                }
-                ToastUtils.setResultToToast(flightController.getRollPitchControlMode().name());
+            case R.id.btn_roll_pitch_control_mode: // Processes each image taken.
+                cameraScanner.fetchLatestMedia(cameraScanner.getCallback(), System.currentTimeMillis());
                 break;
-            case R.id.btn_yaw_control_mode:
+            case R.id.btn_yaw_control_mode: // Takes a image once each time the button is pressed.
                 long startTime = System.currentTimeMillis();
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
@@ -335,6 +330,10 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
+                flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
+                flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
+                flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
+
                 zeroKey = new ZeroKeyWaypoint(getContext());
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { //Take off
                     @Override
@@ -376,6 +375,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                     scheduleNextRun();
                                 } else if (!zeroKey.isLookingAtBox()) {//At waypoint, but not looking at box, yaw to box
                                     handleYawToBox();
+
                                 } else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
                                     //TODO: Camera controls and qr code scanning
                                     //TODO: Take picture, scan QR code, return result here
