@@ -64,8 +64,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private TextView textView;
 
-    private OnScreenJoystick screenJoystickRight;
-    private OnScreenJoystick screenJoystickLeft;
 
     private Timer sendVirtualStickDataTimer;
     private SendVirtualStickDataTask sendVirtualStickDataTask;
@@ -161,8 +159,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
         textView = (TextView) findViewById(R.id.textview_simulator);
 
-        screenJoystickRight = (OnScreenJoystick) findViewById(R.id.directionJoystickRight);
-        screenJoystickLeft = (OnScreenJoystick) findViewById(R.id.directionJoystickLeft);
 
         btnEnableVirtualStick.setOnClickListener(this);
         btnDisableVirtualStick.setOnClickListener(this);
@@ -202,55 +198,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             ToastUtils.setResultToToast("Simulator disconnected!");
         }
 
-        screenJoystickLeft.setJoystickListener(new OnScreenJoystickListener() {
 
-            @Override
-            public void onTouch(OnScreenJoystick joystick, float pX, float pY) {
-                if (Math.abs(pX) < 0.02) {
-                    pX = 0;
-                }
-
-                if (Math.abs(pY) < 0.02) {
-                    pY = 0;
-                }
-                float pitchJoyControlMaxSpeed = 10;
-                float rollJoyControlMaxSpeed = 10;
-
-                pitch = pitchJoyControlMaxSpeed * pY;
-                roll = rollJoyControlMaxSpeed * pX;
-
-                if (null == sendVirtualStickDataTimer) {
-                    sendVirtualStickDataTask = new SendVirtualStickDataTask();
-                    sendVirtualStickDataTimer = new Timer();
-                    sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 100, 200);
-                }
-            }
-        });
-
-        screenJoystickRight.setJoystickListener(new OnScreenJoystickListener() {
-
-            @Override
-            public void onTouch(OnScreenJoystick joystick, float pX, float pY) {
-                if (Math.abs(pX) < 0.02) {
-                    pX = 0;
-                }
-
-                if (Math.abs(pY) < 0.02) {
-                    pY = 0;
-                }
-                float verticalJoyControlMaxSpeed = 4;
-                float yawJoyControlMaxSpeed = 20;
-
-                yaw = yawJoyControlMaxSpeed * pX;
-                throttle = verticalJoyControlMaxSpeed * pY;
-
-                if (null == sendVirtualStickDataTimer) {
-                    sendVirtualStickDataTask = new SendVirtualStickDataTask();
-                    sendVirtualStickDataTimer = new Timer();
-                    sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
-                }
-            }
-        });
     }
 
     private void tearDownListeners() {
@@ -258,8 +206,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
         if (simulator != null) {
             simulator.setStateCallback(null);
         }
-        screenJoystickLeft.setJoystickListener(null);
-        screenJoystickRight.setJoystickListener(null);
     }
 
 
@@ -330,15 +276,20 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
+                /*
                 flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
                 flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
                 flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
-
+*/
                 zeroKey = new ZeroKeyWaypoint(getContext());
+                zeroKey.setWaypoint(new float[]{3,-1,2}); //TODO: THIS IS TEMP
+                zeroKey.nextWaypoint();
+                logger.log("zerokey done in btn");
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { //Take off
                     @Override
                     public void onResult(DJIError djiError) {
                         DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                        logger.log("takeofferror" + djiError.toString());
                     }
                 });
                 flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() { //Enable virtual stick mode
@@ -348,6 +299,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                         DialogUtils.showDialogBasedOnError(getContext(), djiError);
                     }
                 });
+                logger.log("takeoff done");
                 pitch=0f;
                 throttle=0f;
                 yaw=0f;

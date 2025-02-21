@@ -52,7 +52,7 @@ public class ZeroKeyWaypoint {
     private final float waypointAccuracy = 0.1f;//meters
     private final float heightThrottle=0.1f; //m/s
     private final float pitchVelocity=0.1f; //m/s
-    private final float yawVelocity=90f; //degress/s
+    private final float yawVelocity=60f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
     private Logger logger;
 
@@ -103,15 +103,15 @@ public class ZeroKeyWaypoint {
 
     public boolean haveArrived(){ //Check if drone is within specified accuracy of waypoint
         float[] distance = calculateDistance(current_pos, waypoint_pos);
-        logger.log("calculateDistance "+distance[0]+", "+distance[1]);
+        //logger.log("calculateDistance "+distance[0]+", "+distance[1]);
         float height = calculateHeight(current_pos, waypoint_pos);
-        logger.log("calculateHeight "+height);
+        //logger.log("calculateHeight "+height);
         if (distance[0] < waypointAccuracy && distance[1] < waypointAccuracy && height < waypointAccuracy){
             logger.log("Arrived at waypoint");
             return true;
         }
         else{
-            logger.log("Not arrived at waypoint");
+           // logger.log("Not arrived at waypoint");
             return false;
         }
     }
@@ -132,6 +132,7 @@ public class ZeroKeyWaypoint {
 
     private float yawToWaypoint(){
         double angleToWaypoint = calculateAngle(current_angle, waypoint_pos, current_pos);
+        logger.log("AngletoWP: "+angleToWaypoint+"  CurAngle: " +current_angle);
         if (current_angle==angleToWaypoint){//If already at angle
             isLookingAtWaypoint=true;
             logger.log("Yaw to waypoint: Already at angle");
@@ -149,11 +150,11 @@ public class ZeroKeyWaypoint {
     private float throttleToWaypoint(float height){
         if(height>waypointAccuracy){//If height is not the same
             if(height>0){//Drone is below waypoint
-                Toast.makeText(context, "Throttle to waypoint: Ascending", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context, "Throttle to waypoint: Ascending", Toast.LENGTH_SHORT).show();
                 return heightThrottle;
             }
             else{//Drone is above waypoint
-                Toast.makeText(context, "Throttle to waypoint: Descending", Toast.LENGTH_SHORT).show();
+               // Toast.makeText(context, "Throttle to waypoint: Descending", Toast.LENGTH_SHORT).show();
                 return -heightThrottle;
             }
         }
@@ -204,6 +205,7 @@ public class ZeroKeyWaypoint {
 
         double t0 = +2.0 * (w * x + y * z);
         double t1 = +1.0 - 2.0 * (x * x + y * y);
+        logger.log("t0: "+t0+ " t1: "+t1+" result: "+ Math.atan2(t0,t1));
         return (float) Math.atan2(t0, t1);
     }
 

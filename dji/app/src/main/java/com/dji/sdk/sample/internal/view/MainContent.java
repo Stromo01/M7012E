@@ -26,7 +26,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.dji.sdk.sample.R;
-import com.dji.sdk.sample.demo.bluetooth.BluetoothView;
 import com.dji.sdk.sample.demo.flightcontroller.CameraScanner;
 import com.dji.sdk.sample.demo.flightcontroller.VirtualStickView;
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
@@ -205,6 +204,7 @@ public class MainContent extends RelativeLayout {
         mBtnOpen.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                checkAndRequestPermissions();
                 if (GeneralUtils.isFastDoubleClick()) {
                     return;
                 }
@@ -412,8 +412,8 @@ public class MainContent extends RelativeLayout {
         mProduct = DJISampleApplication.getProductInstance();
         Log.d(TAG, "mProduct: " + (mProduct == null ? "null" : "unnull"));
         if (null != mProduct) {
+            mBtnOpen.setEnabled(true);
             if (mProduct.isConnected()) {
-                mBtnOpen.setEnabled(true);
                 String str = mProduct instanceof Aircraft ? "DJIAircraft" : "DJIHandHeld";
                 mTextConnectionStatus.setText("Status: " + str + " connected");
                 tryUpdateFirmwareVersionWithListener();
@@ -431,12 +431,10 @@ public class MainContent extends RelativeLayout {
                 if (aircraft.getRemoteController() != null && aircraft.getRemoteController().isConnected()) {
                     mTextConnectionStatus.setText(R.string.connection_only_rc);
                     mTextProduct.setText(R.string.product_information);
-                    mBtnOpen.setEnabled(false);
                     mTextModelAvailable.setText("Firmware version:N/A");
                 }
             }
         } else {
-            mBtnOpen.setEnabled(false);
             mTextProduct.setText(R.string.product_information);
             mTextConnectionStatus.setText(R.string.connection_loose);
             mTextModelAvailable.setText("Firmware version:N/A");
@@ -558,80 +556,7 @@ public class MainContent extends RelativeLayout {
                         DJISDKManager.getInstance().getLDMManager().setModuleNetworkServiceEnabled(new LDMModule.Builder().moduleType(
                                 LDMModuleType.FIRMWARE_UPGRADE).enabled(false).build());
                     }
-                    if (isregisterForLDM) {
-                        DJISDKManager.getInstance().registerAppForLDM(mContext.getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
-                            @Override
-                            public void onRegister(DJIError djiError) {
-                                if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                                    DJILog.e("App registration for LDM", DJISDKError.REGISTRATION_SUCCESS.getDescription());
-                                    DJISDKManager.getInstance().startConnectionToProduct();
-                                    ToastUtils.setResultToToast(mContext.getString(R.string.sdk_registration_success_message));
-                                } else {
-                                    ToastUtils.setResultToToast(mContext.getString(R.string.sdk_registration_message) + djiError.getDescription());
-                                }
-                                Log.v(TAG, djiError.getDescription());
-                                hideProcess();
-                            }
 
-                            @Override
-                            public void onProductDisconnect() {
-                                Log.d(TAG, "onProductDisconnect");
-                                notifyStatusChange();
-                            }
-
-                            @Override
-                            public void onProductConnect(BaseProduct baseProduct) {
-                                Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
-                                notifyStatusChange();
-                            }
-
-                            @Override
-                            public void onProductChanged(BaseProduct baseProduct) {
-                                notifyStatusChange();
-                            }
-
-                            @Override
-                            public void onComponentChange(BaseProduct.ComponentKey componentKey,
-                                                          BaseComponent oldComponent,
-                                                          BaseComponent newComponent) {
-                                if (newComponent != null) {
-                                    newComponent.setComponentListener(mDJIComponentListener);
-
-                                    if (componentKey == BaseProduct.ComponentKey.FLIGHT_CONTROLLER) {
-                                        showDBVersion();
-                                    }
-                                }
-                                Log.d(TAG,
-                                        String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
-                                                componentKey,
-                                                oldComponent,
-                                                newComponent));
-
-                                notifyStatusChange();
-                            }
-
-                            @Override
-                            public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-
-                            }
-
-                            @Override
-                            public void onDatabaseDownloadProgress(long current, long total) {
-                                int process = (int) (100 * current / total);
-                                if (process == lastProcess) {
-                                    return;
-                                }
-                                lastProcess = process;
-                                showProgress(process);
-                                if (process % 25 == 0) {
-                                    ToastUtils.setResultToToast("DB load process : " + process);
-                                } else if (process == 0) {
-                                    ToastUtils.setResultToToast("DB load begin");
-                                }
-                            }
-                        });
-
-                    } else {
                         DJISDKManager.getInstance().registerApp(mContext.getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
                             @Override
                             public void onRegister(DJIError djiError) {
@@ -671,7 +596,7 @@ public class MainContent extends RelativeLayout {
                                     newComponent.setComponentListener(mDJIComponentListener);
 
                                     if (componentKey == BaseProduct.ComponentKey.FLIGHT_CONTROLLER) {
-                                        showDBVersion();
+
                                     }
                                 }
                                 Log.d(TAG,
@@ -705,7 +630,7 @@ public class MainContent extends RelativeLayout {
                         });
 
                     }
-                }
+
             });
         }
     }
@@ -720,25 +645,7 @@ public class MainContent extends RelativeLayout {
         });
     }
 
-    private void showDBVersion() {
-        mHander.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                DJISDKManager.getInstance().getFlyZoneManager().getPreciseDatabaseVersion(new CommonCallbacks.CompletionCallbackWith<String>() {
-                    @Override
-                    public void onSuccess(String s) {
-                        ToastUtils.setResultToToast("db load success ! version : " + s);
-                    }
 
-                    @Override
-                    public void onFailure(DJIError djiError) {
-                        ToastUtils.setResultToToast("db load failure ! get version error : " + djiError.getDescription());
-
-                    }
-                });
-            }
-        }, 3000);
-    }
 
     private void hideProcess() {
         mHander.post(new Runnable() {
