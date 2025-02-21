@@ -15,7 +15,23 @@ public class InventoryManager {
 
     private static InventoryManager instance;
 
+    private Logger logger = new Logger();
 
+    private InventoryManager() {
+        // Initialize inventory
+    }
+
+    public void submitQrResult(String qrResult) {
+        String[] data = readData(qrResult);
+        String quantity = data[0];
+        String[] productInfo = serchProductInfoWithID(data[1]);
+        if (productInfo.length == 3) {
+            logger.log("Product found: " + productInfo[0] + ", " + productInfo[1] + ", " + productInfo[2]);
+        } else {
+            logger.log("Product not found");
+        }
+        // addItemToFile(productInfo, quantity);
+    }
 
     private JSONArray loadInventoryFile() throws JSONException {
         JSONArray inventoryArray = null;
@@ -74,22 +90,13 @@ public class InventoryManager {
     public void addInventoryItem(String item) {
         // Add item to inventory
     }
-    private static void readData(String data){
-        if (data.length()!= 10){
-            System.out.println("Wrong kode");
-        }
-        try{
-            int antal = Integer.parseInt(data.substring(0, 3));
-            int produkt_ID = Integer.parseInt(data.substring(3, 6));
+    private String[] readData(String data){
 
+        String quantity = data.substring(0, 2);
+        String ID = data.substring(3, 5);
 
-            System.out.println(" antal profukt i lådan: " + antal);
-            System.out.println("vilken produkt finns i lådan: " + produkt_ID);
-
-        }catch(NumberFormatException e){
-            System.out.println(" fel vid av data ");
-
-        }
+        String[] outData = {quantity, ID};
+        return outData;
 
     }
 
@@ -108,24 +115,10 @@ public class InventoryManager {
         return instance;
     }
 
-    private InventoryManager() {
-        // Initialize inventory
-    }
+
 
     public void clearInventory() {
         // Clear inventory
     }
 
-    private void readFile(){
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("inventoryData.txt"));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
