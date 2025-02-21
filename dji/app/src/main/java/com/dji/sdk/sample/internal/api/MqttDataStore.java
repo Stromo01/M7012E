@@ -22,7 +22,7 @@ public class MqttDataStore {
 
     // Setter method to store the position
     public void setPosition(float[] position) {
-        //logger.log("setpos");
+        //logger.log("setpos" + this.position[0]);
         this.position = position;
     }
     public void setAngle(float[] angle) {
@@ -30,6 +30,7 @@ public class MqttDataStore {
     }
     // Getter method to retrieve the position
     public float[] getPosition() {
+        //logger.log("getpos " + position[0]);
         return position;
     }
     public float[] getAngle() {

@@ -375,6 +375,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                     scheduleNextRun();
                                 } else if (!zeroKey.isLookingAtBox()) {//At waypoint, but not looking at box, yaw to box
                                     handleYawToBox();
+
                                 } else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
                                     //TODO: Camera controls and qr code scanning
                                     //TODO: Take picture, scan QR code, return result here

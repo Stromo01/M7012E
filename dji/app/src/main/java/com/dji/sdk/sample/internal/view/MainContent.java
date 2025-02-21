@@ -28,6 +28,7 @@ import android.widget.TextView;
 import com.dji.sdk.sample.R;
 import com.dji.sdk.sample.demo.bluetooth.BluetoothView;
 import com.dji.sdk.sample.demo.flightcontroller.CameraScanner;
+import com.dji.sdk.sample.demo.flightcontroller.VirtualStickView;
 import com.dji.sdk.sample.demo.flightcontroller.ZeroKeyWaypoint;
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
@@ -39,7 +40,9 @@ import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.core.app.ActivityCompat;
@@ -65,6 +68,7 @@ import dji.sdk.sdkmanager.DJISDKManager;
 import dji.sdk.sdkmanager.LDMModule;
 import dji.sdk.sdkmanager.LDMModuleType;
 import dji.sdk.useraccount.UserAccountManager;
+import com.dji.sdk.sample.demo.flightcontroller.Logger;
 
 /**
  * Created by dji on 15/12/18.
@@ -211,40 +215,47 @@ public class MainContent extends RelativeLayout {
 
             @Override
             public void onClick(View v) {
-                if (GeneralUtils.isFastDoubleClick()) {
-                    return;
-                }
                 ZeroKeyWaypoint zeroKey = new ZeroKeyWaypoint(getContext());
                 zeroKey.setWaypoint(new float[]{3, 2, 3});
-                Handler handler = new Handler(Looper.getMainLooper());
-                Runnable updateValuesRunnable = new Runnable() {
-                    @Override
-                    public void run() { //Run method that runs in a loop until all waypoints are visited
-                        handleWaypointNavigation();
-                    }
+                zeroKey.nextWaypoint();
+                Logger logger = new Logger();
+                try {
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    Runnable updateValuesRunnable = new Runnable() {
+                        @Override
+                        public void run() { //Run method that runs in a loop until all waypoints are visited
+                            handleWaypointNavigation();
+                        }
 
-                    private void handleWaypointNavigation() {
+                        private void handleWaypointNavigation() {
                            /* if (zeroKey.getWaypoints().isEmpty()) {//No more waypoints, land
                                 handleLanding();
                             }
                             else */
-                        try {
-                            float[] values = zeroKey.goToWaypoint();
-                            scheduleNextRun();
-                        } catch (Exception e) {
-                            ToastUtils.setResultToToast("Error in waypoint navigation: " + e.getMessage());
-                        }
-                    }
-                    private void scheduleNextRun() {
-                        Handler handler = new Handler(Looper.getMainLooper());
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                handleWaypointNavigation();
+                            try {
+                                    float[] values = zeroKey.goToWaypoint();
+                                    logger.log("values"+ Arrays.toString(values));
+                                    scheduleNextRun();
+
+                            } catch (Exception e) {
+                                ToastUtils.setResultToToast("Error in waypoint navigation: " + e.getMessage());
+
                             }
-                        }, 200);
-                    }
-            };
+                        }
+                        private void scheduleNextRun() {
+                            Handler handler = new Handler(Looper.getMainLooper());
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    handleWaypointNavigation();
+                                }
+                            }, 200);
+                        }
+                    };
+                    handler.post(updateValuesRunnable);
+                }catch (Exception e){
+                    ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
+                }
         };
         });
         mBridgeModeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {

@@ -75,8 +75,8 @@ public class ZeroKeyWaypoint {
 
     public float[] goToWaypoint(){
         try {
-            logger.log("mqtt: " +MqttDataStore.getInstance());
-            logger.log("curpos: " + Arrays.toString(MqttDataStore.getInstance().getPosition()));
+            //logger.log("mqtt: " +MqttDataStore.getInstance());
+            //logger.log("curpos: " + Arrays.toString(MqttDataStore.getInstance().getPosition()));
             current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
             current_pos = MqttDataStore.getInstance().getPosition();
 
