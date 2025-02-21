@@ -1,3 +1,7 @@
+
+
+
+
 package com.dji.sdk.sample.demo.flightcontroller;
 
 public class InventoryManager {
@@ -14,6 +18,24 @@ public class InventoryManager {
 
     public void addInventoryItem(String item) {
         // Add item to inventory
+    }
+    private static void readData(String data){
+        if (data.length()!= 10){
+            System.out.println("fel kod");
+        }
+        try{
+            int antal = Integer.parseInt(data.substring(0, 3));
+            int produkt_ID = Integer.parseInt(data.substring(3, 6));
+
+
+            System.out.println(" antal profukt i lådan: " + antal);
+            System.out.println("vilken produkt finns i lådan: " + produkt_ID);
+
+        }catch(NumberFormatException e){
+            System.out.println(" fel vid av data ");
+
+        }
+
     }
 
     public void removeInventoryItem(String id) {
