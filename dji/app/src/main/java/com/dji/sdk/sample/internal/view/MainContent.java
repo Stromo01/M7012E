@@ -195,15 +195,6 @@ public class MainContent extends RelativeLayout {
             @Override
             public void onClick(View v) {
                 //isregisterForLDM = true;
-                WebserverRequestHandler webserverRequestHandler = new WebserverRequestHandler();
-                try{
-                    webserverRequestHandler.startMQTTFlow(getContext());
-                } catch (Exception e) {
-                    ToastUtils.setResultToToast("Error: " + e);
-                }
-            }
-        });*/
-
                 JsonHandling zeroKeyWaypoint = new JsonHandling();
                 try {
                     zeroKeyWaypoint.setWaypointZeroKey(getContext());
@@ -212,6 +203,8 @@ public class MainContent extends RelativeLayout {
                 }
             }
         });
+
+
         mBtnOpen.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
