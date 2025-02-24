@@ -276,135 +276,132 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
-                /*
                 flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
                 flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
                 flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
-*/
+
                 zeroKey = new ZeroKeyWaypoint(getContext());
-                zeroKey.setWaypoint(new float[]{3,-1,2}); //TODO: THIS IS TEMP
+                zeroKey.setWaypoint(new float[]{3, -1, 2}); // TODO: THIS IS TEMP
                 zeroKey.nextWaypoint();
                 logger.log("zerokey done in btn");
-                flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { //Take off
+                flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { // Take off
                     @Override
                     public void onResult(DJIError djiError) {
-                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                        logger.log("takeofferror" + djiError.toString());
+                        if (djiError == null) {
+                            enableVirtualStickMode(flightController);
+                        }
+                        else{
+                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                            logger.log("takeofferror" + djiError.toString());
+                        }
                     }
                 });
-                flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() { //Enable virtual stick mode
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        flightController.setVirtualStickAdvancedModeEnabled(true);
-                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                    }
-                });
-                logger.log("takeoff done");
-                pitch=0f;
-                throttle=0f;
-                yaw=0f;
-                if (null == sendVirtualStickDataTimer) { //Create timer and task to send virtual stick data
-                    sendVirtualStickDataTask = new SendVirtualStickDataTask();
-                    sendVirtualStickDataTimer = new Timer();
-                }
-                try {
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    Runnable updateValuesRunnable = new Runnable() {
-                        @Override
-                        public void run() { //Run method that runs in a loop until all waypoints are visited
-                            handleWaypointNavigation();
-                        }
-
-                        private void handleWaypointNavigation() {
-                           /* if (zeroKey.getWaypoints().isEmpty()) {//No more waypoints, land
-                                handleLanding();
-                            }
-                            else */
-                            try {
-                                if (!zeroKey.haveArrived()) {//Not at waypoint, go to waypoint
-                                    float[] values = zeroKey.goToWaypoint();
-                                    updateFlightControlData(values);
-                                    scheduleNextRun();
-                                } else if (!zeroKey.isLookingAtBox()) {//At waypoint, but not looking at box, yaw to box
-                                    handleYawToBox();
-
-                                } else if (zeroKey.isLookingAtBox()) {//At waypoint and looking at box, take picture and scan qr code,  go to next waypoint
-                                    //TODO: Camera controls and qr code scanning
-                                    //TODO: Take picture, scan QR code, return result here
-                                    CameraScanner cameraScanner = new CameraScanner();
-                                    cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
-                                        @Override
-                                        public void onQRCodeScanResult(String result) {
-                                            if (result != null) {
-                                                logger.log("Qrcode result: " + result);
-                                            } else {
-                                                logger.log("Qrcode scan failed");
-                                            }
-                                            zeroKey.nextWaypoint();
-                                            scheduleNextRun();
-                                        }
-                                    });
-                                }
-                            } catch (Exception e) {
-                                ToastUtils.setResultToToast("Error in waypoint navigation: " + e.getMessage());
-                                logger.log("Error in waypoint navigation: " + e.getMessage());
-                            }
-                        }
-
-                        private void handleYawToBox() {
-                            yaw = zeroKey.yawToBox();
-                            pitch = 0f;
-                            throttle = 0f;
-                            updateFlightControlData(new float[]{pitch, throttle, yaw});
-                            scheduleNextRun();
-                        }
-
-                        private void handleLanding() {
-                            logger.log("Land");
-                            flightController.startLanding(djiError -> DialogUtils.showDialogBasedOnError(getContext(), djiError));
-                            if (flightcontrollerState.isLandingConfirmationNeeded()) {
-                                flightController.confirmLanding(djiError -> DialogUtils.showDialogBasedOnError(getContext(), djiError));
-                            }
-                        }
-
-                        private void updateFlightControlData(float[] values) { //Update flight control data and send it to the drone using timer and task
-                            if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
-                                pitch = values[0];
-                                throttle = values[1];
-                                yaw = values[2];
-                                ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
-                                if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
-                                    try {
-                                        sendVirtualStickDataTask.cancel();
-                                        sendVirtualStickDataTask = new SendVirtualStickDataTask();
-                                        sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
-                                    } catch (IllegalStateException e) {
-                                        ToastUtils.setResultToToast("Error scheduling task: " + e.getMessage());
-                                        logger.log("Error scheduling task: " + e.getMessage());
-                                    }
-                                }
-                            }
-                        }
-                        private void scheduleNextRun() {
-                            Handler handler = new Handler(Looper.getMainLooper());
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    handleWaypointNavigation();
-                                }
-                            }, 200);
-                        }
-                    };
-                    handler.post(updateValuesRunnable);
-                }catch (Exception e){
-                    ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
-                    logger.log("Error in takeoff: " + e.getMessage());
-                }
                 break;
             default:
                 break;
         }
 
+    }
+
+    private void enableVirtualStickMode(FlightController flightController) {
+        flightController.setVirtualStickModeEnabled(true, new CommonCallbacks.CompletionCallback() { // Enable virtual stick mode
+            @Override
+            public void onResult(DJIError djiError) {
+                flightController.setVirtualStickAdvancedModeEnabled(true);
+                logger.log("virtual stick error" + djiError.toString());
+                if (djiError == null) {
+                    startWaypointNavigation();
+                }
+            }
+        });
+    }
+
+    private void startWaypointNavigation() {
+        pitch = 0f;
+        throttle = 0f;
+        yaw = 0f;
+        if (null == sendVirtualStickDataTimer) { // Create timer and task to send virtual stick data
+            sendVirtualStickDataTask = new SendVirtualStickDataTask();
+            sendVirtualStickDataTimer = new Timer();
+        }
+        try {
+            Handler handler = new Handler(Looper.getMainLooper());
+            Runnable updateValuesRunnable = new Runnable() {
+                @Override
+                public void run() { // Run method that runs in a loop until all waypoints are visited
+                    handleWaypointNavigation();
+                }
+            };
+            handler.post(updateValuesRunnable);
+        } catch (Exception e) {
+            ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
+            logger.log("Error in takeoff: " + e.getMessage());
+        }
+    }
+
+    private void handleWaypointNavigation() {
+        try {
+            if (!zeroKey.haveArrived()) { // Not at waypoint, go to waypoint
+                float[] values = zeroKey.goToWaypoint();
+                updateFlightControlData(values);
+                scheduleNextRun();
+            } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
+                handleYawToBox();
+            } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
+                CameraScanner cameraScanner = new CameraScanner();
+                cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
+                    @Override
+                    public void onQRCodeScanResult(String result) {
+                        if (result != null) {
+                            logger.log("Qrcode result: " + result);
+                        } else {
+                            logger.log("Qrcode scan failed");
+                        }
+                        zeroKey.nextWaypoint();
+                        scheduleNextRun();
+                    }
+                });
+            }
+        } catch (Exception e) {
+            ToastUtils.setResultToToast("Error in waypoint navigation: " + e.getMessage());
+            logger.log("Error in waypoint navigation: " + e.getMessage());
+        }
+    }
+
+    private void handleYawToBox() {
+        yaw = zeroKey.yawToBox();
+        pitch = 0f;
+        throttle = 0f;
+        updateFlightControlData(new float[]{pitch, throttle, yaw});
+        scheduleNextRun();
+    }
+
+    private void updateFlightControlData(float[] values) { // Update flight control data and send it to the drone using timer and task
+        if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
+            pitch = values[0];
+            throttle = values[1];
+            yaw = values[2];
+            ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
+            if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
+                try {
+                    sendVirtualStickDataTask.cancel();
+                    sendVirtualStickDataTask = new SendVirtualStickDataTask();
+                    sendVirtualStickDataTimer.schedule(sendVirtualStickDataTask, 0, 200);
+                } catch (IllegalStateException e) {
+                    ToastUtils.setResultToToast("Error scheduling task: " + e.getMessage());
+                    logger.log("Error scheduling task: " + e.getMessage());
+                }
+            }
+        }
+    }
+    private void scheduleNextRun() {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                handleWaypointNavigation();
+            }
+        }, 200);
     }
 
     @Override
