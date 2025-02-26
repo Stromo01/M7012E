@@ -1,5 +1,6 @@
 package com.dji.sdk.sample.demo.flightcontroller;
 
+import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.os.Handler;
@@ -27,6 +28,8 @@ import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -82,7 +85,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private Logger logger;
 
-    CameraScanner cameraScanner = new CameraScanner();
+    CameraScanner cameraScanner = new CameraScanner(getContext());
 
     public VirtualStickView(Context context) {
         super(context);
@@ -237,6 +240,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
             case R.id.btn_roll_pitch_control_mode: // Processes each image taken.
                 cameraScanner.fetchLatestMedia(cameraScanner.getCallback(), System.currentTimeMillis());
+
+
                 break;
             case R.id.btn_yaw_control_mode: // Takes a image once each time the button is pressed.
                 long startTime = System.currentTimeMillis();
@@ -348,7 +353,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
                 handleYawToBox();
             } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
-                CameraScanner cameraScanner = new CameraScanner();
+                CameraScanner cameraScanner = new CameraScanner(getContext());
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
                     public void onQRCodeScanResult(String result) {

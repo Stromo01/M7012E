@@ -58,7 +58,7 @@ public class CameraScanner {
 
     private Logger logger;
 
-    private InventoryManager inventoryManager = new InventoryManager();
+    private InventoryManager inventoryManager;
 
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
@@ -66,13 +66,15 @@ public class CameraScanner {
 
     private int count = 0;
 
-    public CameraScanner() { // add
+    public CameraScanner(Context context) { // add
+        this.context = context;
+
         initializeCamera();  // sätta upp kameran
     }
     // Kollar om kamera är tillgänglig
     private void initializeCamera() {
         logger = Logger.getInstance();
-        inventoryManager = new InventoryManager();
+        inventoryManager = new InventoryManager(context);
         logger.log("logger initialized");
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             // Hämtar kameran från drönaren och kontrollerar att den inte är null

@@ -1,25 +1,23 @@
-
-
-
-
 package com.dji.sdk.sample.demo.flightcontroller;
 
-import android.text.style.LineBackgroundSpan;
+
+import android.app.Activity;
+import android.app.Application;
+import android.content.Context;
+import android.os.Environment;
+
+import com.google.gson.JsonParser;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 import java.io.*;
-import java.nio.file.*;
-import java.util.*;
-import java.util.ArrayList;
-
+import java.util.Arrays;
 
 public class InventoryManager {
 
@@ -28,33 +26,39 @@ public class InventoryManager {
 
     private Logger logger;
 
-    public InventoryManager() {
+    private Context context;
+
+    public InventoryManager(Context context) {
         // Initialize inventory
-        logger = new Logger();
+        logger = Logger.getInstance();
+        this.context = context;
     }
 
     public void submitQrResult(String qrResult) {
+        //loadJSONFromAsset();
+        logger.log("submitQrResult called with: " + qrResult);
         String[] data = readData(qrResult);
-        logger.log("row 38");
+        logger.log("Parsed data: " + Arrays.toString(data));
         String quantity = data[0];
-        logger.log("row 40");
+        logger.log("Quantity: " + quantity);
         String[] productInfo = serchProductInfoWithID(data[1]);
-        logger.log("row 41");
-        //if (productInfo.length == 3) {
-        //    logger.log("Product found: " + productInfo[0] + ", " + productInfo[1] + ", " + productInfo[2]);
-        //} else {
-        //    logger.log("Product not found");
-        //}
+        logger.log("Product info: " + Arrays.toString(productInfo));
+        if (productInfo.length == 3) {
+            logger.log("Product found: " + productInfo[0] + ", " + productInfo[1] + ", " + productInfo[2]);
+        } else {
+            logger.log("Product not found");
+        }
         addItemToFile(productInfo, quantity);
     }
 
     private void addItemToFile(String[] productInfo, String quantity) {
         String newLine = String.join(" : ", productInfo) + " : " + quantity;
-        logger.log(newLine);
+        logger.log("Adding item to file: " + newLine);
         try {
             File file = new File("app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/Inventory.txt");
             if (!file.exists()) {
                 file.createNewFile();
+                logger.log("Created new file: " + file.getPath());
             }
 
             FileWriter fw = new FileWriter(file, true);
@@ -64,39 +68,50 @@ public class InventoryManager {
             newLine = String.join(" : ", productInfo) + " : " + quantity;
             out.println(newLine);
             out.close();
-            logger.log(newLine);
-            System.out.println("data: " + newLine);
-
+            logger.log("Successfully added item to file: " + newLine);
         } catch (IOException e) {
-            logger.log(newLine + "error");
+            logger.log("Error adding item to file: " + e.getMessage());
         }
     }
 
-    private JSONArray loadInventoryFile() throws JSONException {
-        logger.log("row 75");
-        JSONArray inventoryArray = null;
+    public String loadJSONFromAsset(Context applicationContext) {
+        logger.log("Loading JSON from asset");
+        String json = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader("app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/ProduktInfo.json"));
-            StringBuilder jsonContent = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonContent.append(line);
-            }
-            reader.close();
-            inventoryArray = new JSONArray(jsonContent.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
+            InputStream is = applicationContext.getApplicationContext().getAssets().open("ProduktInfo.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            logger.log("Error loading JSON from asset: " + ex.getMessage());
+
+            return null;
         }
+        logger.log("Loaded JSON from asset: " + json);
+        return json;
+    }
+    private JSONArray loadInventoryFile() throws JSONException {
+
+        logger.log("Loading inventory file");
+        JSONArray inventoryArray = null;
+        JsonParser parser = new JsonParser();
+
+        JSONObject obj = new JSONObject(loadJSONFromAsset(context));
+        inventoryArray = obj.getJSONArray("products");
+        logger.log("Successfully loaded inventory file");
+        logger.log("Inventory: " + inventoryArray.toString());
         return inventoryArray;
     }
 
     private String[] serchProductInfoWithID(String id) {
-        logger.log("row 93");
+        logger.log("Searching product info with ID: " + id);
         JSONArray inventoryArray = null;
         try {
             inventoryArray = loadInventoryFile();
         } catch (JSONException e) {
-            e.printStackTrace();
+            logger.log("Error loading inventory: " + e.getMessage());
             return new String[]{"Error loading inventory"};
         }
         if (inventoryArray != null) {
@@ -105,47 +120,33 @@ public class InventoryManager {
                 try {
                     item = inventoryArray.getJSONObject(i);
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    logger.log("Error getting JSON object: " + e.getMessage());
                     continue;
                 }
                 try {
                     if (item.getString("id").equals(id)) {
+                        logger.log("Product found: " + item.getString("name"));
                         return new String[]{item.getString("name"), item.getString("size"), item.getString("color")};
                     }
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    logger.log("Error getting product info: " + e.getMessage());
                 }
             }
         }
+        logger.log("Product not found with ID: " + id);
         return new String[]{"Product not found"};
     }
 
-    private String[] readData(String data){
-        logger.log("row 118");
-
+    private String[] readData(String data) {
+        logger.log("Reading data: " + data);
         String quantity = data.substring(0, 3);
-        logger.log("row 127");
-        String ID = data.substring(4, 7);
-        logger.log("row 129");
+        logger.log("Extracted quantity: " + quantity);
+        String ID = data.substring(3, 6);
+        logger.log("Extracted ID: " + ID);
         String[] outData = {quantity, ID};
-        logger.log(outData[0] + outData[1]);
+        logger.log("Parsed data: " + Arrays.toString(outData));
         return outData;
-
     }
-
-
-    public InventoryManager getInstance() {
-        if (instance == null) {
-            instance = new InventoryManager();
-        }
-        return instance;
-    }
-
 
 
 }
-
-
-
-
-
