@@ -58,7 +58,7 @@ public class CameraScanner {
 
     private Logger logger;
 
-    private InventoryManager inventoryManager;
+    private InventoryManager inventoryManager = new InventoryManager();
 
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
@@ -72,7 +72,7 @@ public class CameraScanner {
     // Kollar om kamera är tillgänglig
     private void initializeCamera() {
         logger = Logger.getInstance();
-        inventoryManager = InventoryManager.getInstance();
+        inventoryManager = new InventoryManager();
         logger.log("logger initialized");
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             // Hämtar kameran från drönaren och kontrollerar att den inte är null
@@ -251,6 +251,7 @@ public class CameraScanner {
                 BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
                 try {
                     Result result = new MultiFormatReader().decode(binaryBitmap);
+                    logger.log("We got to row 254");
                     inventoryManager.submitQrResult(result.getText());
                     i = 0;
                     return result.getText();
@@ -261,7 +262,7 @@ public class CameraScanner {
                     logger.log("Bitmap width: " + bitmap.getWidth() + ", height: " + bitmap.getHeight());
                     logger.log("errordecoding" + e.getMessage());
                     i = 0;
-                    return "null row 159";
+                    return "null row 265";
                 }
 
             }

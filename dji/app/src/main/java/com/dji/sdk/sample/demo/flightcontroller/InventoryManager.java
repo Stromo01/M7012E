@@ -9,6 +9,9 @@ import android.text.style.LineBackgroundSpan;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
@@ -20,28 +23,34 @@ import java.util.ArrayList;
 
 public class InventoryManager {
 
+    private static final Log log = LogFactory.getLog(InventoryManager.class);
     private static InventoryManager instance;
 
-    private Logger logger = new Logger();
+    private Logger logger;
 
-    private InventoryManager() {
+    public InventoryManager() {
         // Initialize inventory
         logger = new Logger();
     }
 
     public void submitQrResult(String qrResult) {
         String[] data = readData(qrResult);
+        logger.log("row 38");
         String quantity = data[0];
+        logger.log("row 40");
         String[] productInfo = serchProductInfoWithID(data[1]);
-        if (productInfo.length == 3) {
-            logger.log("Product found: " + productInfo[0] + ", " + productInfo[1] + ", " + productInfo[2]);
-        } else {
-            logger.log("Product not found");
-        }
+        logger.log("row 41");
+        //if (productInfo.length == 3) {
+        //    logger.log("Product found: " + productInfo[0] + ", " + productInfo[1] + ", " + productInfo[2]);
+        //} else {
+        //    logger.log("Product not found");
+        //}
         addItemToFile(productInfo, quantity);
     }
 
     private void addItemToFile(String[] productInfo, String quantity) {
+        String newLine = String.join(" : ", productInfo) + " : " + quantity;
+        logger.log(newLine);
         try {
             File file = new File("app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/Inventory.txt");
             if (!file.exists()) {
@@ -52,18 +61,19 @@ public class InventoryManager {
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw);
 
-            String newLine = String.join(" : ", productInfo) + " : " + quantity;
+            newLine = String.join(" : ", productInfo) + " : " + quantity;
             out.println(newLine);
             out.close();
             logger.log(newLine);
             System.out.println("data: " + newLine);
 
         } catch (IOException e) {
-            System.err.println("File handling error: " + e.getMessage());
+            logger.log(newLine + "error");
         }
     }
 
     private JSONArray loadInventoryFile() throws JSONException {
+        logger.log("row 75");
         JSONArray inventoryArray = null;
         try {
             BufferedReader reader = new BufferedReader(new FileReader("app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/ProduktInfo.json"));
@@ -81,6 +91,7 @@ public class InventoryManager {
     }
 
     private String[] serchProductInfoWithID(String id) {
+        logger.log("row 93");
         JSONArray inventoryArray = null;
         try {
             inventoryArray = loadInventoryFile();
@@ -110,11 +121,14 @@ public class InventoryManager {
     }
 
     private String[] readData(String data){
+        logger.log("row 118");
 
-        String quantity = data.substring(0, 2);
-        String ID = data.substring(3, 5);
-
+        String quantity = data.substring(0, 3);
+        logger.log("row 127");
+        String ID = data.substring(4, 7);
+        logger.log("row 129");
         String[] outData = {quantity, ID};
+        logger.log(outData[0] + outData[1]);
         return outData;
 
     }
