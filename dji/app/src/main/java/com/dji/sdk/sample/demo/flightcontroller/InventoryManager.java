@@ -26,6 +26,7 @@ public class InventoryManager {
 
     private InventoryManager() {
         // Initialize inventory
+        logger = new Logger();
     }
 
     public void submitQrResult(String qrResult) {
@@ -54,6 +55,7 @@ public class InventoryManager {
             String newLine = String.join(" : ", productInfo) + " : " + quantity;
             out.println(newLine);
             out.close();
+            logger.log(newLine);
             System.out.println("data: " + newLine);
 
         } catch (IOException e) {
