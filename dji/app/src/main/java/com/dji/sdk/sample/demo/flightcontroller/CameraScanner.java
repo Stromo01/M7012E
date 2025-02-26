@@ -58,6 +58,8 @@ public class CameraScanner {
 
     private Logger logger;
 
+    private InventoryManager inventoryManager;
+
     private MediaManager mediaManager;  // Hanterar bilder och videor från kameran
     private  Context context;  // add
     private int i = 0;
@@ -70,6 +72,7 @@ public class CameraScanner {
     // Kollar om kamera är tillgänglig
     private void initializeCamera() {
         logger = Logger.getInstance();
+        inventoryManager = InventoryManager.getInstance();
         logger.log("logger initialized");
         if (ModuleVerificationUtil.isCameraModuleAvailable()) {
             // Hämtar kameran från drönaren och kontrollerar att den inte är null
@@ -248,6 +251,7 @@ public class CameraScanner {
                 BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
                 try {
                     Result result = new MultiFormatReader().decode(binaryBitmap);
+                    inventoryManager.submitQrResult(result.getText());
                     i = 0;
                     return result.getText();
                 } catch (Exception e) {

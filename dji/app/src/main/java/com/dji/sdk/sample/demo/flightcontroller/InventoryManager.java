@@ -30,7 +30,7 @@ public class InventoryManager {
         } else {
             logger.log("Product not found");
         }
-        // addItemToFile(productInfo, quantity);
+        addItemToFile(productInfo, quantity);
     }
 
     private JSONArray loadInventoryFile() throws JSONException {
