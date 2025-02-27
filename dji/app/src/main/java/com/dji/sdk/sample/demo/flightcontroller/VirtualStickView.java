@@ -347,7 +347,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             if (!zeroKey.haveArrived()) { // Not at waypoint, go to waypoint
                 float[] values = zeroKey.goToWaypoint();
                 updateFlightControlData(values);
-                scheduleNextRun();
             } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
                 handleYawToBox();
             } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
@@ -363,7 +362,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                             logger.log("Qrcode scan failed");
                         }
                         zeroKey.nextWaypoint();
-                        scheduleNextRun();
                     }
                 });
             }
@@ -378,7 +376,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
         pitch = 0f;
         throttle = 0f;
         updateFlightControlData(new float[]{pitch, throttle, yaw});
-        scheduleNextRun();
     }
 
     private void updateFlightControlData(float[] values) { // Update flight control data and send it to the drone using timer and task
@@ -398,15 +395,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
             }
         }
-    }
-    private void scheduleNextRun() {
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                handleWaypointNavigation();
-            }
-        }, 200);
     }
 
     @Override
