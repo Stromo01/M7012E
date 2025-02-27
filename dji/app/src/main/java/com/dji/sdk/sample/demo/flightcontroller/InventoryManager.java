@@ -45,7 +45,7 @@ public class InventoryManager {
     }
 
     private void addItemToFile(String[] productInfo, String quantity) {
-        String newLine = String.join(" : ", productInfo) + " : " + quantity;
+        String newLine = "{\"name\": \"" + productInfo[0] + "\", \"size\": \"" + productInfo[1] + "\", \"color\": \"" + productInfo[2] + "\", \"quantity\": \"" + quantity + "\"}";
         logger.log("Adding item to file: " + newLine);
         try {
             File file = new File(context.getFilesDir(), "InventoryFile.json");
