@@ -51,21 +51,21 @@
 
     <Button
         android:id="@+id/btn_yaw_control_mode"
+        style="@style/common_button"
         android:layout_below="@id/btn_horizontal_coordinate"
-        android:layout_marginRight="10dp"
         android:layout_marginTop="10dp"
+        android:layout_marginRight="10dp"
         android:layout_toLeftOf="@id/btn_vertical_control_mode"
-        android:text="Yaw Control Mode"
-        style="@style/common_button"/>
+        android:text="Scan QR" />
 
     <Button
         android:id="@+id/btn_roll_pitch_control_mode"
+        style="@style/common_button"
         android:layout_below="@id/btn_horizontal_coordinate"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:layout_toRightOf="@id/btn_vertical_control_mode"
-        android:text="Pitch Roll Control Mode"
-        style="@style/common_button"/>
+        android:text="Convert QR codes" />
 
     <ToggleButton
         android:id="@+id/btn_start_simulator"

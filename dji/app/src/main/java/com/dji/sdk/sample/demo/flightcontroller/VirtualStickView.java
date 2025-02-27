@@ -179,28 +179,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     }
 
     private void setUpListeners() {
-        if (simulator != null) {
-            simulator.setStateCallback(new SimulatorState.Callback() {
-                @Override
-                public void onUpdate(@NonNull final SimulatorState simulatorState) {
-                    ToastUtils.setResultToText(textView,
-                            "Yaw : "
-                                    + simulatorState.getYaw()
-                                    + ","
-                                    + "X : "
-                                    + simulatorState.getPositionX()
-                                    + "\n"
-                                    + "Y : "
-                                    + simulatorState.getPositionY()
-                                    + ","
-                                    + "Z : "
-                                    + simulatorState.getPositionZ());
-                }
-            });
-        } else {
-            ToastUtils.setResultToToast("Simulator disconnected!");
-        }
-
 
     }
 
@@ -259,8 +237,15 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 break;
             case R.id.btn_vertical_control_mode:
                 zeroKey = new ZeroKeyWaypoint(getContext());
-                zeroKey.setCurrentPos(zeroKey.getWaypoints().get(0));
-                zeroKey.nextWaypoint();
+                try{
+                    zeroKey.setCurrentPos(zeroKey.getWaypoints().get(0));
+                    zeroKey.nextWaypoint();
+                }
+                catch(Exception e){
+                    logger.log("No Zerokey object found");
+                    ToastUtils.setResultToToast("No Zerokey object found");
+                }
+
                 break;
             case R.id.btn_horizontal_coordinate:
                 flightController.startLanding(new CommonCallbacks.CompletionCallback() {
@@ -405,30 +390,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     }
 
     private void onClickSimulator(boolean isChecked) {
-        if (simulator == null) {
-            return;
-        }
-        if (isChecked) {
-            textView.setVisibility(VISIBLE);
-            simulator.start(InitializationData.createInstance(new LocationCoordinate2D(23, 113), 10, 10), new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        ToastUtils.setResultToToast(djiError.getDescription());
-                    }
-                }
-            });
-        } else {
-            textView.setVisibility(INVISIBLE);
-            simulator.stop(new CommonCallbacks.CompletionCallback() {
-                @Override
-                public void onResult(DJIError djiError) {
-                    if (djiError != null) {
-                        ToastUtils.setResultToToast(djiError.getDescription());
-                    }
-                }
-            });
-        }
+
     }
 
     @Override
