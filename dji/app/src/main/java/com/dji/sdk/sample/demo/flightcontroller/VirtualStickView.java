@@ -1,6 +1,5 @@
 package com.dji.sdk.sample.demo.flightcontroller;
 
-import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.os.Handler;
@@ -30,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -146,7 +146,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             simulator = ModuleVerificationUtil.getSimulator();
         }
         isSimulatorActived = simulator.isSimulatorActive();
-        logger = new Logger();
+        logger = Logger.getInstance();
     }
 
     private void initUI() {
@@ -240,8 +240,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
             case R.id.btn_roll_pitch_control_mode: // Processes each image taken.
                 cameraScanner.fetchLatestMedia(cameraScanner.getCallback(), System.currentTimeMillis());
-
-
                 break;
             case R.id.btn_yaw_control_mode: // Takes a image once each time the button is pressed.
                 long startTime = System.currentTimeMillis();
@@ -349,10 +347,11 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             if (!zeroKey.haveArrived()) { // Not at waypoint, go to waypoint
                 float[] values = zeroKey.goToWaypoint();
                 updateFlightControlData(values);
-                scheduleNextRun();
             } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
                 handleYawToBox();
             } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
+                logger.log("is looking at box");
+                updateFlightControlData(new float[]{0,0,0});
                 CameraScanner cameraScanner = new CameraScanner(getContext());
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
@@ -363,7 +362,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                             logger.log("Qrcode scan failed");
                         }
                         zeroKey.nextWaypoint();
-                        scheduleNextRun();
                     }
                 });
             }
@@ -378,7 +376,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
         pitch = 0f;
         throttle = 0f;
         updateFlightControlData(new float[]{pitch, throttle, yaw});
-        scheduleNextRun();
     }
 
     private void updateFlightControlData(float[] values) { // Update flight control data and send it to the drone using timer and task
@@ -398,15 +395,6 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
             }
         }
-    }
-    private void scheduleNextRun() {
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                handleWaypointNavigation();
-            }
-        }, 200);
     }
 
     @Override

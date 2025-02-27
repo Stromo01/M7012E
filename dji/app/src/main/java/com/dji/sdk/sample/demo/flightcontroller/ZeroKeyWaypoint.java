@@ -1,6 +1,8 @@
 package com.dji.sdk.sample.demo.flightcontroller;
 
 
+import static java.lang.Math.abs;
+
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
 import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.DialogUtils;
@@ -50,9 +52,10 @@ public class ZeroKeyWaypoint {
     private boolean isLookingAtBox;
     private boolean isLookingAtWaypoint;
     private final float waypointAccuracy = 0.1f;//meters
-    private final float heightThrottle=0.1f; //m/s
+    private final float angleAccuracy= 10f;//degrees
+    private final float heightThrottle=0f; //m/s //TODO: Change this to 0.1f
     private final float pitchVelocity=0.1f; //m/s
-    private final float yawVelocity=60f; //degress/s
+    private final float yawVelocity=20f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
     private Logger logger;
 
@@ -67,7 +70,6 @@ public class ZeroKeyWaypoint {
             server = new WebserverRequestHandler();
             server.startMQTTFlow(context);
             //loadWaypointsFromCSV();
-            //nextWaypoint();
         } catch (Exception e) {
             logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());
         };
@@ -75,11 +77,11 @@ public class ZeroKeyWaypoint {
 
     public float[] goToWaypoint(){
         try {
-            //logger.log("mqtt: " +MqttDataStore.getInstance());
-            //logger.log("curpos: " + Arrays.toString(MqttDataStore.getInstance().getPosition()));
             current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
             current_pos = MqttDataStore.getInstance().getPosition();
-
+            if (current_pos[0]==0 && current_pos[1]==0 && current_pos[2]==0){
+                return new float[]{0,0,0};
+            }
             float[] distance = calculateDistance(current_pos, waypoint_pos);
             float height = calculateHeight(current_pos, waypoint_pos);
             if (!isLookingAtWaypoint){
@@ -103,42 +105,41 @@ public class ZeroKeyWaypoint {
 
     public boolean haveArrived(){ //Check if drone is within specified accuracy of waypoint
         float[] distance = calculateDistance(current_pos, waypoint_pos);
-        //logger.log("calculateDistance "+distance[0]+", "+distance[1]);
+        logger.log("distance "+distance[0]+", "+distance[1]);
         float height = calculateHeight(current_pos, waypoint_pos);
-        //logger.log("calculateHeight "+height);
+        logger.log("height "+height);
         if (distance[0] < waypointAccuracy && distance[1] < waypointAccuracy && height < waypointAccuracy){
             logger.log("Arrived at waypoint");
+
             return true;
         }
         else{
-           // logger.log("Not arrived at waypoint");
             return false;
         }
     }
-    public boolean nextWaypoint() { //Set next waypoint as current waypoint
+    public void nextWaypoint() { //Set next waypoint as current waypoint
         logger.log("nextWaypoint called with " + waypoints.size() + " waypoints");
         if (!waypoints.isEmpty()) {
             waypoint_pos = waypoints.remove(0);
             isLookingAtWaypoint = false;
             logger.log("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
             ToastUtils.setResultToToast("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
-            return true;
         }
         else{
             logger.log("No more waypoints");
-            return false;
         }
     }
 
     private float yawToWaypoint(){
-        double angleToWaypoint = calculateAngle(current_angle, waypoint_pos, current_pos);
+        double angleToWaypoint = calculateAngle(waypoint_pos, current_pos);
         logger.log("AngletoWP: "+angleToWaypoint+"  CurAngle: " +current_angle);
-        if (current_angle==angleToWaypoint){//If already at angle
+        if (abs(current_angle-angleToWaypoint)<angleAccuracy){//If already at angle
             isLookingAtWaypoint=true;
             logger.log("Yaw to waypoint: Already at angle");
             return 0f;
         }
         else{//Yaw to waypoint//TODO: Check if this is correct
+            logger.log("not lloking at wp");
             if (angleToWaypoint > current_angle) {
                 return yawVelocity; // Yaw right
             } else {
@@ -150,11 +151,9 @@ public class ZeroKeyWaypoint {
     private float throttleToWaypoint(float height){
         if(height>waypointAccuracy){//If height is not the same
             if(height>0){//Drone is below waypoint
-                //Toast.makeText(context, "Throttle to waypoint: Ascending", Toast.LENGTH_SHORT).show();
                 return heightThrottle;
             }
             else{//Drone is above waypoint
-               // Toast.makeText(context, "Throttle to waypoint: Descending", Toast.LENGTH_SHORT).show();
                 return -heightThrottle;
             }
         }
@@ -189,7 +188,7 @@ public class ZeroKeyWaypoint {
         }
     }
 
-    private double calculateAngle(float current_angle, float[] waypoint_pos, float[] current_pos) {
+    private double calculateAngle(float[] waypoint_pos, float[] current_pos) {
         float deltaX = waypoint_pos[0] - current_pos[0];
         float deltaY = waypoint_pos[1] - current_pos[1];
         double angleInRadians = Math.atan2(deltaY, deltaX);
@@ -203,10 +202,12 @@ public class ZeroKeyWaypoint {
         double y = quaternion[2];
         double z = quaternion[3];
 
-        double t0 = +2.0 * (w * x + y * z);
-        double t1 = +1.0 - 2.0 * (x * x + y * y);
-        logger.log("t0: "+t0+ " t1: "+t1+" result: "+ Math.atan2(t0,t1));
-        return (float) Math.atan2(t0, t1);
+        double t0 = 2.0 * (w * z + x * y);
+        double t1 = 1.0 - 2.0 * (y * y + z * z);
+
+        double result = Math.atan2(t0, t1)*180/3.14;
+        logger.log("result angle from quat: "+ result);
+        return (float) result;
     }
 
     private float[] calculateDistance(float[] current_pos, float[] waypoint_pos) {
@@ -261,8 +262,6 @@ public class ZeroKeyWaypoint {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        //setWaypoint(new float[]{3, -1, 2});
 
     }
 
