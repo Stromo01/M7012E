@@ -1,15 +1,8 @@
 package com.dji.sdk.sample.demo.flightcontroller;
 
 
-import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
-import android.os.Environment;
 
-import com.google.gson.JsonParser;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,7 +48,7 @@ public class InventoryManager {
         String newLine = String.join(" : ", productInfo) + " : " + quantity;
         logger.log("Adding item to file: " + newLine);
         try {
-            File file = new File("app/src/main/java/com/dji/sdk/sample/demo/flightcontroller/Inventory.txt");
+            File file = new File(context.getFilesDir(), "InventoryFile.json");
             if (!file.exists()) {
                 file.createNewFile();
                 logger.log("Created new file: " + file.getPath());
@@ -65,12 +58,11 @@ public class InventoryManager {
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw);
 
-            newLine = String.join(" : ", productInfo) + " : " + quantity;
             out.println(newLine);
             out.close();
             logger.log("Successfully added item to file: " + newLine);
         } catch (IOException e) {
-            logger.log("Error adding item to file: " + e.getMessage());
+            logger.log("Error adding item to file: " + e);
         }
     }
 
@@ -93,13 +85,10 @@ public class InventoryManager {
         return json;
     }
     private JSONArray loadInventoryFile() throws JSONException {
-
         logger.log("Loading inventory file");
         JSONArray inventoryArray = null;
-        JsonParser parser = new JsonParser();
-
-        JSONObject obj = new JSONObject(loadJSONFromAsset(context));
-        inventoryArray = obj.getJSONArray("products");
+        String json = loadJSONFromAsset(context);
+        inventoryArray = new JSONArray(json);
         logger.log("Successfully loaded inventory file");
         logger.log("Inventory: " + inventoryArray.toString());
         return inventoryArray;
@@ -108,16 +97,15 @@ public class InventoryManager {
     private String[] serchProductInfoWithID(String id) {
         logger.log("Searching product info with ID: " + id);
         JSONArray inventoryArray;
-        try{
+        try {
             inventoryArray = loadInventoryFile();
-            if (inventoryArray.length()==0){
-                logger.log("Inventory is empty");
-                return new String[]{"load inventory"};
+            if (inventoryArray == null || inventoryArray.length() == 0) {
+                logger.log("Inventory is empty or null");
+                return new String[]{"Error loading inventory"};
             }
-            for (int i = 0;i < inventoryArray.length();i++){ // Loops through all products
-                JSONObject item = inventoryArray.getJSONObject(i); // fetch the product at index i
-                if (item.getString("id").equals(id)){ // Checks if ID matches
-                    // return product information if ID matches
+            for (int i = 0; i < inventoryArray.length(); i++) {
+                JSONObject item = inventoryArray.getJSONObject(i);
+                if (item.getString("id").equals(id)) {
                     logger.log("Product found: " + item.getString("name"));
                     return new String[]{
                             item.getString("name"),
@@ -126,13 +114,12 @@ public class InventoryManager {
                     };
                 }
             }
-        }catch (JSONException e){
-            logger.log("Error inventory JSON: " + e.getMessage());
-            return new String[]{"Error inventory JSON:"};
+        } catch (JSONException e) {
+            logger.log("Error processing inventory JSON: " + e.getMessage());
+            return new String[]{"Error processing inventory JSON"};
         }
-        logger.log("Product not found with id: " + id);
+        logger.log("Product not found with ID: " + id);
         return new String[]{"Product not found"};
-
     }
 
     private String[] readData(String data) {
