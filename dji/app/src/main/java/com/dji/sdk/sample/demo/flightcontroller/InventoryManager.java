@@ -107,34 +107,32 @@ public class InventoryManager {
 
     private String[] serchProductInfoWithID(String id) {
         logger.log("Searching product info with ID: " + id);
-        JSONArray inventoryArray = null;
-        try {
+        JSONArray inventoryArray;
+        try{
             inventoryArray = loadInventoryFile();
-        } catch (JSONException e) {
-            logger.log("Error loading inventory: " + e.getMessage());
-            return new String[]{"Error loading inventory"};
-        }
-        if (inventoryArray != null) {
-            for (int i = 0; i < inventoryArray.length(); i++) {
-                JSONObject item = null;
-                try {
-                    item = inventoryArray.getJSONObject(i);
-                } catch (JSONException e) {
-                    logger.log("Error getting JSON object: " + e.getMessage());
-                    continue;
-                }
-                try {
-                    if (item.getString("id").equals(id)) {
-                        logger.log("Product found: " + item.getString("name"));
-                        return new String[]{item.getString("name"), item.getString("size"), item.getString("color")};
-                    }
-                } catch (JSONException e) {
-                    logger.log("Error getting product info: " + e.getMessage());
+            if (inventoryArray.length()==0){
+                logger.log("Inventory is empty");
+                return new String[]{"load inventory"};
+            }
+            for (int i = 0;i < inventoryArray.length();i++){ // Loops through all products
+                JSONObject item = inventoryArray.getJSONObject(i); // fetch the product at index i
+                if (item.getString("id").equals(id)){ // Checks if ID matches
+                    // return product information if ID matches
+                    logger.log("Product found: " + item.getString("name"));
+                    return new String[]{
+                            item.getString("name"),
+                            item.getString("size"),
+                            item.getString("color")
+                    };
                 }
             }
+        }catch (JSONException e){
+            logger.log("Error inventory JSON: " + e.getMessage());
+            return new String[]{"Error inventory JSON:"};
         }
-        logger.log("Product not found with ID: " + id);
+        logger.log("Product not found with id: " + id);
         return new String[]{"Product not found"};
+
     }
 
     private String[] readData(String data) {
