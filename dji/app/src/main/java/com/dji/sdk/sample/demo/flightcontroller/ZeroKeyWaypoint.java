@@ -37,8 +37,8 @@ import org.json.JSONObject;
 
 
 public class ZeroKeyWaypoint {
-    private float[] current_pos;
-    private float current_angle;
+    private float[] current_pos; // Use this to save new coordinates.
+    private float current_angle; // Save this as well
     private float[] waypoint_pos;
     private FlightController flightController;
     private Context context;

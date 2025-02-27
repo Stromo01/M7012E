@@ -218,7 +218,10 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
             case R.id.btn_roll_pitch_control_mode: // Processes each image taken.
                 cameraScanner.fetchLatestMedia(cameraScanner.getCallback(), System.currentTimeMillis());
+
+                // Save New ZeroKeyWaypoint coordinates with this button and save in waypoints.json use ZeroKeyWaypoint class and add a function.
                 break;
+
             case R.id.btn_yaw_control_mode: // Takes a image once each time the button is pressed.
                 long startTime = System.currentTimeMillis();
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
