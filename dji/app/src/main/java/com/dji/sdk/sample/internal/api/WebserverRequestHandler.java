@@ -66,6 +66,7 @@ public class WebserverRequestHandler {
             client.setCallback(new MqttCallback() {
                 @Override
                 public void connectionLost(Throwable cause) {
+                    MqttDataStore.getInstance().setPosition(new float[]{0,0,0});
                     logger.log("Connection lost: " + cause.getMessage());
                     ToastUtils.setResultToToast("Connection lost: " + cause.getMessage());
                 }
