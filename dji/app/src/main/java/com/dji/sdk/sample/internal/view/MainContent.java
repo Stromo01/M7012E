@@ -81,6 +81,8 @@ public class MainContent extends RelativeLayout {
     private AtomicBoolean isRegistrationInProgress = new AtomicBoolean(false);
     private int lastProcess = -1;
     private Handler mHander = new Handler();
+
+
     private BaseComponent.ComponentListener mDJIComponentListener = new BaseComponent.ComponentListener() {
 
         @Override
@@ -119,9 +121,13 @@ public class MainContent extends RelativeLayout {
     private boolean isregisterForLDM = false;
     private Context mContext;
 
+    private Logger logger;
+
     public MainContent(Context context, AttributeSet attrs) {
         super(context, attrs);
         mContext = context;
+        logger= Logger.getInstance();
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissionArrays = new String[]{
@@ -193,11 +199,12 @@ public class MainContent extends RelativeLayout {
         getmBtnRegisterAppForLDM.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //isregisterForLDM = true;
                 JsonHandling zeroKeyWaypoint = new JsonHandling();
                 try {
+                    logger.log("run");
                     zeroKeyWaypoint.setWaypointZeroKey(getContext());
                 } catch (Exception e) {
+                    logger.log("runn't");
                     ToastUtils.setResultToToast("Error: " + e);
                 }
             }

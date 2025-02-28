@@ -9,6 +9,7 @@ import com.dji.sdk.sample.internal.api.MqttDataStore;
 
 import android.util.Log;
 
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -31,10 +32,13 @@ public class ZeroKeyWaypoint {
     private float[] current_pos; // Use this to save new coordinates.
     private float current_angle; // Save this as well
     private float[] waypoint_pos;
+
+    private float[] waypoint_angle;
     private FlightController flightController;
     private Context context;
 
-    private ArrayList<float[]> waypoints = new ArrayList<float[]>();
+    private List<Waypoints> waypoints = new ArrayList<>();
+
 
     private float yaw;
     private float pitch;
@@ -52,6 +56,10 @@ public class ZeroKeyWaypoint {
 
     private WebserverRequestHandler server;
 
+    private Waypoints waypoints_class;
+
+    private JsonHandling jsonHandling;
+
 
     public ZeroKeyWaypoint(Context context){
         try {
@@ -59,6 +67,7 @@ public class ZeroKeyWaypoint {
             logger= Logger.getInstance();
             current_pos = new float[]{0, 0, 0};
             server = new WebserverRequestHandler();
+            jsonHandling = new JsonHandling();
             server.startMQTTFlow(context);
             //loadWaypointsFromCSV();
         } catch (Exception e) {
@@ -110,10 +119,16 @@ public class ZeroKeyWaypoint {
     }
     public void nextWaypoint() { //Set next waypoint as current waypoint
         logger.log("nextWaypoint called with " + waypoints.size() + " waypoints");
+        waypoints = jsonHandling.setWaypointZeroKey(context);
+        logger.log("All the waypoints?"+waypoints);
+
         if (!waypoints.isEmpty()) {
-            waypoint_pos = waypoints.remove(0);
+            waypoint_pos = waypoints.get(0).getnextPos();
+            waypoint_angle = waypoints.get(0).getnextAngle();
+            waypoints.remove(0);
             isLookingAtWaypoint = false;
             logger.log("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
+            logger.log("Next angle: " + waypoint_angle[0] + ", " + waypoint_angle[1] + ", " + waypoint_angle[2] + ", "+ waypoint_angle[3]);
             ToastUtils.setResultToToast("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
         }
         else{
@@ -279,6 +294,8 @@ public class ZeroKeyWaypoint {
     }
 
     public ArrayList<float[]> getWaypoints(){
+        ArrayList<float[]> waypoints = new ArrayList<>();
+        waypoints.add(new float[]{1, 2, 3}); // Add arrays properly
         return waypoints;
     }
     public boolean isLookingAtBox(){
@@ -288,7 +305,7 @@ public class ZeroKeyWaypoint {
         this.current_pos = current_pos;
     }
     public void setWaypoint(float[] waypoint_pos) {
-        waypoints.add(waypoint_pos);
+        waypoints.add(new Waypoints());
     }
 
 

@@ -1,73 +1,67 @@
 package com.dji.sdk.sample.demo.flightcontroller;
 
-import com.dji.sdk.sample.demo.flightcontroller.Logger;
-
-import com.dji.sdk.sample.internal.api.MqttDataStore;
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
-
-import org.json.JSONArray;
-import org.json.JSONException;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.lang.reflect.Type;
 
 import android.content.Context;
-import android.util.Log;
+
+import java.io.*;
+import java.util.List;
+
 
 
 
 public class JsonHandling {
 
     private Logger logger = Logger.getInstance();
+    private File waypointsFile;
     private WebserverRequestHandler server;
     private Context context;
-    public void setWaypointZeroKey(Context context) {
-        this.context = context;
-        server = new WebserverRequestHandler();
-        server.startMQTTFlow(context);
-        System.out.println(new File(".").getAbsolutePath());
-        Path path = Paths.get("app\\src\\main\\java\\com\\dji\\sdk\\sample\\demo\\flightcontroller");
-        float[] cur_pos = MqttDataStore.getInstance().getPosition(); // Your float position
-        for (int i = 0; i < cur_pos.length; i++) {
-            logger.log("Position " + i + ": " + cur_pos[i]);
-        }
 
 
+    public List<Waypoints> setWaypointZeroKey(Context applicationContext) {
+        logger = Logger.getInstance();
+
+
+        // Define directory and file paths
+        String json = null;
         try {
-            JSONArray jsonArray;
-            logger.log("reached");
-            if (Files.exists(path)) {
-                String content = new String(Files.readAllBytes(path));
-                if (!content.trim().isEmpty()) {
-                    logger.log("file is empty");
-                    jsonArray = new JSONArray(content);
-                } else {
-                    jsonArray = new JSONArray();
-                }
-            } else {
-                logger.log("reached3");
-                jsonArray = new JSONArray(); // Create new if file doesn't exist
-            }
+            // Ensure directory exists
 
-            // Convert float array to JSONArray
-            JSONArray positionArray = new JSONArray();
-            for (float pos : cur_pos) {
-                logger.log("reached4");
-                positionArray.put(pos);
-            }
-            logger.log("reached5");
-            jsonArray.put(positionArray); // Append new position array
-            logger.log("what to write"+ jsonArray.toString(4).getBytes());
-            // Write back to file
+            InputStream is = applicationContext.getApplicationContext().getAssets().open("waypoints.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
 
-            Files.write(path, jsonArray.toString(4).getBytes()); // Pretty-print with indentation
 
         } catch (Exception e) {
-            logger.log("reached catch"+e.getMessage());
+            logger.log("Error handling waypoints file: " + e.getMessage());
             e.printStackTrace();
         }
+
+        Gson gson = new Gson();
+        Type listType = new TypeToken<List<Waypoints>>() {}.getType();
+
+        List<Waypoints> waypointsList = gson.fromJson(json, listType);
+
+        // Log the entire list
+        logger.log("Waypoints List: " + waypointsList.toString());
+
+        // Print each waypoint individually
+        for (Waypoints waypoint : waypointsList) {
+            logger.log("first waypoint x: " + waypoint);
+        }
+        logger.log("first x:"+ waypointsList.get(0).getX());
+        return waypointsList;
     }
+
+
+
 }
+
