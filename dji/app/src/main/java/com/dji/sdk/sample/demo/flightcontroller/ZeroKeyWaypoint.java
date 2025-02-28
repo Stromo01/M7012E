@@ -4,35 +4,26 @@ package com.dji.sdk.sample.demo.flightcontroller;
 import static java.lang.Math.abs;
 
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
-import com.dji.sdk.sample.internal.controller.DJISampleApplication;
-import com.dji.sdk.sample.internal.utils.DialogUtils;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.api.MqttDataStore;
 
-import android.os.Environment;
 import android.util.Log;
-import android.widget.Toast;
-import java.io.BufferedReader;
+
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import dji.common.error.DJIError;
-import dji.common.flightcontroller.virtualstick.FlightControlData;
-import dji.common.util.CommonCallbacks;
 import dji.sdk.flightcontroller.FlightController;
 
 import android.content.Context;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -265,6 +256,28 @@ public class ZeroKeyWaypoint {
 
     }
 
+    public void addNewWaypoint() {
+        String newLine = "{\"position\": [" + current_pos[0] + ", " + current_pos[1] + ", " + current_pos[2] + "], \"angle\": " + current_angle + "}";
+        logger.log("Adding waypoint to file: " + newLine);
+        try {
+            File file = new File(context.getFilesDir(), "waypoints.json");
+            if (!file.exists()) {
+                file.createNewFile();
+                logger.log("Created new file: " + file.getPath());
+            }
+
+            FileWriter fw = new FileWriter(file, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw);
+
+            out.println(newLine);
+            out.close();
+            logger.log("Successfully added waypoint to file: " + newLine);
+        } catch (IOException e) {
+            logger.log("Error adding waypoint to file: " + e);
+        }
+    }
+
     public ArrayList<float[]> getWaypoints(){
         return waypoints;
     }
@@ -277,5 +290,8 @@ public class ZeroKeyWaypoint {
     public void setWaypoint(float[] waypoint_pos) {
         waypoints.add(waypoint_pos);
     }
+
+
+
 
 }
