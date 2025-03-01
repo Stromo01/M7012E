@@ -422,6 +422,7 @@ public class MainContent extends RelativeLayout {
     private void refreshSDKRelativeUI() {
         mProduct = DJISampleApplication.getProductInstance();
         Log.d(TAG, "mProduct: " + (mProduct == null ? "null" : "unnull"));
+        mBtnOpen.setEnabled(false);
         if (null != mProduct) {
             mBtnOpen.setEnabled(true);
             if (mProduct.isConnected()) {

@@ -147,6 +147,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
         }
         isSimulatorActived = simulator.isSimulatorActive();
         logger = Logger.getInstance();
+        zeroKey = new ZeroKeyWaypoint(getContext());
     }
 
     private void initUI() {
@@ -270,7 +271,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
                 flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
 
-                zeroKey = new ZeroKeyWaypoint(getContext());
+
                 zeroKey.setWaypoint(new float[]{3, -1, 2}); // TODO: THIS IS TEMP
                 zeroKey.nextWaypoint();
                 logger.log("zerokey done in btn");
