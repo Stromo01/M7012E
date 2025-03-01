@@ -31,7 +31,6 @@ public class JsonHandling {
         String json = null;
         try {
             // Ensure directory exists
-
             InputStream is = applicationContext.getApplicationContext().getAssets().open("waypoints.json");
             int size = is.available();
             byte[] buffer = new byte[size];
@@ -51,13 +50,8 @@ public class JsonHandling {
         List<Waypoints> waypointsList = gson.fromJson(json, listType);
 
         // Log the entire list
-        logger.log("Waypoints List: " + waypointsList.toString());
 
         // Print each waypoint individually
-        for (Waypoints waypoint : waypointsList) {
-            logger.log("first waypoint x: " + waypoint);
-        }
-        logger.log("first x:"+ waypointsList.get(0).getX());
         return waypointsList;
     }
 

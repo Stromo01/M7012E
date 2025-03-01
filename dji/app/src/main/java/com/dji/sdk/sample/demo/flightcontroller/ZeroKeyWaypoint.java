@@ -63,6 +63,7 @@ public class ZeroKeyWaypoint {
             server = new WebserverRequestHandler();
             jsonHandling = new JsonHandling();
             server.startMQTTFlow(context);
+            waypoints = jsonHandling.setWaypointZeroKey(context);
             //loadWaypointsFromCSV();
         } catch (Exception e) {
             logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());
@@ -113,7 +114,6 @@ public class ZeroKeyWaypoint {
     }
     public void nextWaypoint() { //Set next waypoint as current waypoint
         logger.log("nextWaypoint called with " + waypoints.size() + " waypoints");
-        waypoints = jsonHandling.setWaypointZeroKey(context);
         logger.log("All the waypoints?"+waypoints);
 
         if (!waypoints.isEmpty()) {

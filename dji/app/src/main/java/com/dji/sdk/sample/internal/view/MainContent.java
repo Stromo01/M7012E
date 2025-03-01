@@ -199,10 +199,11 @@ public class MainContent extends RelativeLayout {
         getmBtnRegisterAppForLDM.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                JsonHandling zeroKeyWaypoint = new JsonHandling();
+                ZeroKeyWaypoint zeroKeyWaypoint = new ZeroKeyWaypoint(getContext());
                 try {
                     logger.log("run");
-                    zeroKeyWaypoint.setWaypointZeroKey(getContext());
+                    zeroKeyWaypoint.nextWaypoint();
+                    zeroKeyWaypoint.nextWaypoint();
                 } catch (Exception e) {
                     logger.log("runn't");
                     ToastUtils.setResultToToast("Error: " + e);
