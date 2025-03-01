@@ -9,6 +9,12 @@ import com.dji.sdk.sample.internal.api.MqttDataStore;
 
 import android.util.Log;
 
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -265,6 +271,28 @@ public class ZeroKeyWaypoint {
 
     }
 
+    public void addNewWaypoint() {
+        String newLine = "{\"position\": [" + current_pos[0] + ", " + current_pos[1] + ", " + current_pos[2] + "], \"angle\": " + current_angle + "}";
+        logger.log("Adding waypoint to file: " + newLine);
+        try {
+            File file = new File(context.getFilesDir(), "waypoints.json");
+            if (!file.exists()) {
+                file.createNewFile();
+                logger.log("Created new file: " + file.getPath());
+            }
+
+            FileWriter fw = new FileWriter(file, true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw);
+
+            out.println(newLine);
+            out.close();
+            logger.log("Successfully added waypoint to file: " + newLine);
+        } catch (IOException e) {
+            logger.log("Error adding waypoint to file: " + e);
+        }
+    }
+
     public ArrayList<float[]> getWaypoints(){
         ArrayList<float[]> waypoints = new ArrayList<>();
         waypoints.add(new float[]{1, 2, 3}); // Add arrays properly
@@ -279,5 +307,8 @@ public class ZeroKeyWaypoint {
     public void setWaypoint(float[] waypoint_pos) {
         waypoints.add(new Waypoints());
     }
+
+
+
 
 }
