@@ -272,14 +272,14 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
 
 
-                zeroKey.setWaypoint(new float[]{3, -1, 2}); // TODO: THIS IS TEMP
+                //zeroKey.setWaypoint(new float[]{3, -1, 2}); // TODO: THIS IS TEMP
                 zeroKey.nextWaypoint();
                 logger.log("zerokey done in btn");
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { // Take off
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null) {
-                            enableVirtualStickMode(flightController);
+                            startWaypointNavigation();
                         }
                         else{
                             DialogUtils.showDialogBasedOnError(getContext(), djiError);
@@ -321,6 +321,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 @Override
                 public void run() { // Run method that runs in a loop until all waypoints are visited
                     handleWaypointNavigation();
+                    handler.postDelayed(this,200);
                 }
             };
             handler.post(updateValuesRunnable);
@@ -336,7 +337,22 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 float[] values = zeroKey.goToWaypoint();
                 updateFlightControlData(values);
             } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
-                handleYawToBox();
+                //handleYawToBox();
+                //updateFlightControlData(new float[]{0,0,0});
+                flightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                    }
+                });
+                if(flightcontrollerState.isLandingConfirmationNeeded()){
+                    flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
+                        @Override
+                        public void onResult(DJIError djiError) {
+                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                        }
+                    });
+                }
             } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
                 logger.log("is looking at box");
                 updateFlightControlData(new float[]{0,0,0});
