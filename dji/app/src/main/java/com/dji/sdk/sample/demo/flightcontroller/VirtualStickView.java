@@ -279,7 +279,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                     @Override
                     public void onResult(DJIError djiError) {
                         if (djiError == null) {
-                            enableVirtualStickMode(flightController);
+                            startWaypointNavigation();
                         }
                         else{
                             DialogUtils.showDialogBasedOnError(getContext(), djiError);

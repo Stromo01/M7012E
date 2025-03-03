@@ -78,7 +78,7 @@ public class ZeroKeyWaypoint {
 
     public float[] goToWaypoint(){
         try {
-            current_angle = calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
+            current_angle = flightController.getCompass().getHeading();//calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
             current_pos = MqttDataStore.getInstance().getPosition();
             if (current_pos[0]==0 && current_pos[1]==0 && current_pos[2]==0){
                 return new float[]{0,0,0};
