@@ -4,6 +4,7 @@ package com.dji.sdk.sample.demo.flightcontroller;
 import static java.lang.Math.abs;
 
 import com.dji.sdk.sample.internal.api.WebserverRequestHandler;
+import com.dji.sdk.sample.internal.controller.DJISampleApplication;
 import com.dji.sdk.sample.internal.utils.ToastUtils;
 import com.dji.sdk.sample.internal.api.MqttDataStore;
 
@@ -70,6 +71,7 @@ public class ZeroKeyWaypoint {
             jsonHandling = new JsonHandling();
             server.startMQTTFlow(context);
             waypoints = jsonHandling.setWaypointZeroKey(context);
+            flightController = DJISampleApplication.getAircraftInstance().getFlightController();
             //loadWaypointsFromCSV();
         } catch (Exception e) {
             logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());

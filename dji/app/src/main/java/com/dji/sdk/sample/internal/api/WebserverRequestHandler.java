@@ -52,8 +52,8 @@ public class WebserverRequestHandler {
             logger.log("Client id : " + CLIENT_ID);
             client = new MqttAndroidClient(context, BROKER, CLIENT_ID);
             connect();
-            //scheduler = Executors.newScheduledThreadPool(1);
-            //scheduler.scheduleWithFixedDelay(this::processLatestMessage, 0, 200, TimeUnit.MILLISECONDS);
+            scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.scheduleWithFixedDelay(this::processLatestMessage, 0, 200, TimeUnit.MILLISECONDS);
             logger.log("End of MQTT flow");
         }
         catch(Exception e) {
@@ -77,34 +77,7 @@ public class WebserverRequestHandler {
 
                 @Override
                 public void messageArrived(String topic, MqttMessage message) {
-                    try {
-                        // Convert MQTT message payload to String
-                        String payload = new String(latestMessage.getPayload());
-                        try {
-                            JSONObject json = new JSONObject(payload);
-                            JSONObject content = json.getJSONObject("Content");
-                            if (content.has("Position")) {
-                                JSONArray positionArray = content.getJSONArray("Position");
-                                float[] position = new float[positionArray.length()];
-                                for (int i = 0; i < positionArray.length(); i++) {
-                                    position[i] = (float) positionArray.getDouble(i);
-                                }
-                                JSONArray angleArray = content.getJSONArray("Orientation");
-                                float[] angle = new float[angleArray.length()];
-                                for (int i = 0; i < angleArray.length(); i++) {
-                                    angle[i] = (float) angleArray.getDouble(i);
-                                }
-                                MqttDataStore.getInstance().setPosition(position);
-                                MqttDataStore.getInstance().setAngle(angle);
-                            }
-                        } catch (Exception e) {
-                            logger.log("ERROR:" + e.getMessage());
-                            System.out.println("Failed to parse JSON: " + e.getMessage());
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        logger.log("Failed to parse JSON: " + e.getMessage());
-                    }
+                    latestMessage = message;
                 }
 
                 @Override
