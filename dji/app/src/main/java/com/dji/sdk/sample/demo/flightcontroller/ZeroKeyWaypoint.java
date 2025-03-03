@@ -274,7 +274,16 @@ public class ZeroKeyWaypoint {
     }
 
     public void addNewWaypoint() {
-        String newLine = "{\"position\": [" + current_pos[0] + ", " + current_pos[1] + ", " + current_pos[2] + "], \"angle\": " + current_angle + "}";
+        List<Waypoints> waypointsList = jsonHandling.setWaypointZeroKey(context);
+        int lastId = 0;
+        if (!waypointsList.isEmpty()) {
+            lastId = waypointsList.get(waypointsList.size() - 1).getId();
+        } else {
+            logger.log("No waypoints found");
+        }
+
+        String newLine = "},\n{\"x\": " + current_pos[0] + ", \"y\": " + current_pos[1] + ", \"z\": " + current_pos[2] + ", \"angle\": " + current_angle + ", \"id\": " + (lastId + 1) + "}" + ", \"]\": ";
+
         logger.log("Adding waypoint to file: " + newLine);
         try {
             File file = new File(context.getFilesDir(), "waypoints.json");
@@ -283,6 +292,18 @@ public class ZeroKeyWaypoint {
                 logger.log("Created new file: " + file.getPath());
             }
 
+            // Read the file content
+            List<String> lines = Files.readAllLines(file.toPath());
+            if (!lines.isEmpty()) {
+                // Remove the last line twice
+                lines.remove(lines.size() - 1);
+                lines.remove(lines.size() - 1);
+            }
+
+            // Write the updated content back to the file
+            Files.write(file.toPath(), lines);
+
+            // Append the new line
             FileWriter fw = new FileWriter(file, true);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw);

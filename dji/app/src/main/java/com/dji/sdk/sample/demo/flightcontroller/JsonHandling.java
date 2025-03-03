@@ -10,6 +10,8 @@ import java.lang.reflect.Type;
 import android.content.Context;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 
@@ -31,7 +33,7 @@ public class JsonHandling {
         String json = null;
         try {
             // Ensure directory exists
-            InputStream is = applicationContext.getApplicationContext().getAssets().open("waypoints.json");
+            InputStream is = applicationContext.getApplicationContext().openFileInput("waypoints.json");
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
@@ -40,7 +42,7 @@ public class JsonHandling {
 
 
         } catch (Exception e) {
-            logger.log("Error handling waypoints file: " + e.getMessage());
+            logger.log("Error handling waypoints file: " + e);
             e.printStackTrace();
         }
 
