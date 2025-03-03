@@ -32,8 +32,9 @@ public class JsonHandling {
         // Define directory and file paths
         String json = null;
         try {
+            logger.log("Reading waypoints file");
             // Ensure directory exists
-            InputStream is = applicationContext.getApplicationContext().openFileInput("waypoints.json");
+            InputStream is = applicationContext.getApplicationContext().getAssets().open("waypoints.json");
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
@@ -45,7 +46,7 @@ public class JsonHandling {
             logger.log("Error handling waypoints file: " + e);
             e.printStackTrace();
         }
-
+        logger.log("new Gson");
         Gson gson = new Gson();
         Type listType = new TypeToken<List<Waypoints>>() {}.getType();
 

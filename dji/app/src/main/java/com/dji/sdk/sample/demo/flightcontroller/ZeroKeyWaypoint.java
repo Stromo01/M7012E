@@ -55,6 +55,8 @@ public class ZeroKeyWaypoint {
     private static final String TAG = "ZeroKeyWaypoint";
     private Logger logger;
 
+    private int addedWaypoints;
+
     private WebserverRequestHandler server;
 
     private Waypoints waypoints_class;
@@ -64,6 +66,7 @@ public class ZeroKeyWaypoint {
 
     public ZeroKeyWaypoint(Context context){
         try {
+            addedWaypoints = 0;
             this.context = context;
             logger= Logger.getInstance();
             current_pos = new float[]{0, 0, 0};
@@ -274,15 +277,36 @@ public class ZeroKeyWaypoint {
     }
 
     public void addNewWaypoint() {
+        logger.log("Adding new waypoint");
         List<Waypoints> waypointsList = jsonHandling.setWaypointZeroKey(context);
+        logger.log("Waypoints: list size: " + waypointsList.size());
         int lastId = 0;
+        String newLine = "[\n" +
+                "{\"x\": " + current_pos[0] + ",\n" +
+                " \"y\": " + current_pos[1] + ",\n" +
+                " \"z\": " + current_pos[2] + ",\n" +
+                " \"angle\": " + current_angle + ",\n" +
+                " \"id\": " + (lastId + 1 + addedWaypoints) + "\n" +
+                "}\n" +
+                "]";
         if (!waypointsList.isEmpty()) {
             lastId = waypointsList.get(waypointsList.size() - 1).getId();
+             newLine = "},\n" +
+                    "{\"x\": " + current_pos[0] + ",\n" +
+                    " \"y\": " + current_pos[1] + ",\n" +
+                    " \"z\": " + current_pos[2] + ",\n" +
+                    " \"angle\": " + current_angle + ",\n" +
+                    " \"id\": " + (lastId + 1 + addedWaypoints) + "\n" +
+                    "}\n" +
+                    "]";
+            addedWaypoints++;
         } else {
             logger.log("No waypoints found");
-        }
 
-        String newLine = "},\n{\"x\": " + current_pos[0] + ", \"y\": " + current_pos[1] + ", \"z\": " + current_pos[2] + ", \"angle\": " + current_angle + ", \"id\": " + (lastId + 1) + "}" + ", \"]\": ";
+            addedWaypoints++;
+        }
+        logger.log("Last ID: " + lastId);
+
 
         logger.log("Adding waypoint to file: " + newLine);
         try {
@@ -291,7 +315,7 @@ public class ZeroKeyWaypoint {
                 file.createNewFile();
                 logger.log("Created new file: " + file.getPath());
             }
-
+            logger.log("Removing last 2 lines");
             // Read the file content
             List<String> lines = Files.readAllLines(file.toPath());
             if (!lines.isEmpty()) {
@@ -300,14 +324,16 @@ public class ZeroKeyWaypoint {
                 lines.remove(lines.size() - 1);
             }
 
+            logger.log("Writing the updated content back to the file");
             // Write the updated content back to the file
             Files.write(file.toPath(), lines);
 
+            logger.log("Appending the new line");
             // Append the new line
             FileWriter fw = new FileWriter(file, true);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw);
-
+            logger.log("Writing new line: " + newLine);
             out.println(newLine);
             out.close();
             logger.log("Successfully added waypoint to file: " + newLine);
