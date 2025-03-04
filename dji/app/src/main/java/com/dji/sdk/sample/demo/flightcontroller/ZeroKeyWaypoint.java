@@ -19,7 +19,9 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import dji.sdk.flightcontroller.FlightController;
 
@@ -47,10 +49,10 @@ public class ZeroKeyWaypoint {
 
     private boolean isLookingAtBox;
     private boolean isLookingAtWaypoint;
-    private final float waypointAccuracy = 0.1f;//meters
-    private final float angleAccuracy= 10f;//degrees
+    private final float waypointAccuracy = 1f;//meters
+    private final float angleAccuracy= 2f;//degrees
     private final float heightThrottle=0f; //m/s //TODO: Change this to 0.1f
-    private final float pitchVelocity=0.1f; //m/s
+    private final float pitchVelocity=0.3f; //m/s
     private final float yawVelocity=20f; //degress/s
     private static final String TAG = "ZeroKeyWaypoint";
     private Logger logger;
@@ -74,7 +76,7 @@ public class ZeroKeyWaypoint {
             jsonHandling = new JsonHandling();
             server.startMQTTFlow(context);
             waypoints = jsonHandling.setWaypointZeroKey(context);
-            flightController = DJISampleApplication.getAircraftInstance().getFlightController();
+            flightController = Objects.requireNonNull(DJISampleApplication.getAircraftInstance()).getFlightController();
             //loadWaypointsFromCSV();
         } catch (Exception e) {
             logger.log("Error initializing ZeroKeyWaypoint" + e.getMessage());
@@ -83,8 +85,11 @@ public class ZeroKeyWaypoint {
 
     public float[] goToWaypoint(){
         try {
-            current_angle = flightController.getCompass().getHeading();//calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
+            current_angle = -45+flightController.getCompass().getHeading();//calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
+            current_angle = ((current_angle + 180) % 360 + 360) % 360 - 180;
+
             current_pos = MqttDataStore.getInstance().getPosition();
+            logger.log("curpos: "+ Arrays.toString(current_pos));
             if (current_pos[0]==0 && current_pos[1]==0 && current_pos[2]==0){
                 return new float[]{0,0,0};
             }
@@ -95,8 +100,10 @@ public class ZeroKeyWaypoint {
             }
             else{
                 yaw = yawToWaypoint();//Yaw movement
+
                 throttle = throttleToWaypoint(height);//Vertical movement
                 pitch = pitchToWaypoint(distance);//Forward movement
+                logger.log("THE PITCH "+ pitch);
             }
             //yawToBox();
             return new float[]{pitch, throttle, yaw};
@@ -123,7 +130,7 @@ public class ZeroKeyWaypoint {
             return false;
         }
     }
-    public void nextWaypoint() { //Set next waypoint as current waypoint
+    public boolean nextWaypoint() { //Set next waypoint as current waypoint
         logger.log("nextWaypoint called with " + waypoints.size() + " waypoints");
         logger.log("All the waypoints?"+waypoints);
 
@@ -135,9 +142,11 @@ public class ZeroKeyWaypoint {
             logger.log("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
             logger.log("Next angle: " + waypoint_angle[0] + ", " + waypoint_angle[1] + ", " + waypoint_angle[2] + ", "+ waypoint_angle[3]);
             ToastUtils.setResultToToast("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
+            return true;
         }
         else{
             logger.log("No more waypoints");
+            return false;
         }
     }
 
@@ -149,9 +158,15 @@ public class ZeroKeyWaypoint {
             logger.log("Yaw to waypoint: Already at angle");
             return 0f;
         }
-        else{//Yaw to waypoint//TODO: Check if this is correct
-            logger.log("not lloking at wp");
-            if (angleToWaypoint > current_angle) {
+        else { // Yaw to waypoint
+            // Calculate the shortest yaw direction
+            double angleDifference = angleToWaypoint - current_angle;
+
+            // Normalize angle difference to (-180, 180] range
+            angleDifference = ((angleDifference + 180) % 360 + 360) % 360 - 180;
+
+            // Determine yaw direction
+            if (angleDifference > 0) {
                 return yawVelocity; // Yaw right
             } else {
                 return -yawVelocity; // Yaw left
@@ -160,11 +175,14 @@ public class ZeroKeyWaypoint {
     }
 
     private float throttleToWaypoint(float height){
+        logger.log("throttleouter");
         if(height>waypointAccuracy){//If height is not the same
             if(height>0){//Drone is below waypoint
+                logger.log("throttle");
                 return heightThrottle;
             }
             else{//Drone is above waypoint
+                logger.log("throttle");
                 return -heightThrottle;
             }
         }
@@ -174,7 +192,9 @@ public class ZeroKeyWaypoint {
     }
 
     private float pitchToWaypoint(float[] distance){
+        logger.log("pitchouther");
         if(distance[0]>waypointAccuracy || distance[1]>waypointAccuracy){//If is not in the waypoint area
+            logger.log("pitch");
             return pitchVelocity;
         }
         else{
@@ -207,6 +227,8 @@ public class ZeroKeyWaypoint {
         return angleInDegrees; //TODO:: Add this to current angle
     }
 
+    //
+
     private float calculateYawFromQuaternion(float[] quaternion) {
         double w = quaternion[0];
         double x = quaternion[1];
@@ -223,8 +245,9 @@ public class ZeroKeyWaypoint {
 
     private float[] calculateDistance(float[] current_pos, float[] waypoint_pos) {
         float [] distance = new float[2];
-        for (int i = 0; i < 1; i++) {
-            distance[i] = waypoint_pos[i] - current_pos[i];
+        for (int i = 0; i < 2; i++) {
+            //logger.log("WaypointPos: "+ i + waypoint_pos[i] + current_pos[i]);
+            distance[i] = Math.abs(waypoint_pos[i] - current_pos[i]);
         }
         return distance;
     }

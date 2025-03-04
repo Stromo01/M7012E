@@ -267,6 +267,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
+
                 flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
                 flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
                 flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
@@ -321,7 +322,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 @Override
                 public void run() { // Run method that runs in a loop until all waypoints are visited
                     handleWaypointNavigation();
-                    handler.postDelayed(this,200);
+                    handler.postDelayed(this,100);
                 }
             };
             handler.post(updateValuesRunnable);
@@ -333,12 +334,15 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private void handleWaypointNavigation() {
         try {
+            boolean temp =true;
             if (!zeroKey.haveArrived()) { // Not at waypoint, go to waypoint
                 float[] values = zeroKey.goToWaypoint();
                 updateFlightControlData(values);
-            } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
+            } else if (!zeroKey.isLookingAtBox()&& temp) { // At waypoint, but not looking at box, yaw to box
                 //handleYawToBox();
-                //updateFlightControlData(new float[]{0,0,0});
+                temp=false;
+                updateFlightControlData(new float[]{0,0,0});
+                logger.log("LAND");
                 flightController.startLanding(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError djiError) {
@@ -365,7 +369,23 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                         } else {
                             logger.log("Qrcode scan failed");
                         }
-                        zeroKey.nextWaypoint();
+                        if(!(zeroKey.nextWaypoint())){
+                            flightController.startLanding(new CommonCallbacks.CompletionCallback() {
+                                @Override
+                                public void onResult(DJIError djiError) {
+                                    DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                                }
+                            });
+                            if(flightcontrollerState.isLandingConfirmationNeeded()){
+                                flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
+                                    @Override
+                                    public void onResult(DJIError djiError) {
+                                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
+                                    }
+                                });
+                            }
+                        }
+
                     }
                 });
             }
@@ -383,11 +403,11 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     }
 
     private void updateFlightControlData(float[] values) { // Update flight control data and send it to the drone using timer and task
-        if (values[0] != pitch || values[1] != throttle || values[2] != yaw) {
-            pitch = values[0];
+        if (values[0] != roll || values[1] != throttle || values[2] != yaw) {
+            roll = values[0];
             throttle = values[1];
             yaw = values[2];
-            ToastUtils.setResultToToast("Pitch: " + pitch + " Throttle: " + throttle + " Yaw: " + yaw);
+            ToastUtils.setResultToToast("Roll: " + roll + " Throttle: " + throttle + " Yaw: " + yaw);
             if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
                 try {
                     sendVirtualStickDataTask.cancel();
