@@ -65,6 +65,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     private ToggleButton btnSimulator;
     private Button btnTakeOff;
 
+    private boolean stopHandler = false;
+    private boolean isWaitingForCallback = false;
     private TextView textView;
 
 
@@ -267,13 +269,11 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 }
                 break;
             case R.id.btn_take_off: //Start waypoint navigation
-
                 flightController.setYawControlMode(dji.common.flightcontroller.virtualstick.YawControlMode.ANGULAR_VELOCITY);
                 flightController.setRollPitchControlMode(dji.common.flightcontroller.virtualstick.RollPitchControlMode.VELOCITY);
                 flightController.setVerticalControlMode(dji.common.flightcontroller.virtualstick.VerticalControlMode.VELOCITY);
 
 
-                //zeroKey.setWaypoint(new float[]{3, -1, 2}); // TODO: THIS IS TEMP
                 zeroKey.nextWaypoint();
                 logger.log("zerokey done in btn");
                 flightController.startTakeoff(new CommonCallbacks.CompletionCallback() { // Take off
@@ -322,7 +322,9 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 @Override
                 public void run() { // Run method that runs in a loop until all waypoints are visited
                     handleWaypointNavigation();
-                    handler.postDelayed(this,100);
+                    if(!stopHandler){
+                        handler.postDelayed(this,100);
+                    }
                 }
             };
             handler.post(updateValuesRunnable);
@@ -339,14 +341,14 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 updateFlightControlData(values);
             } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
                 handleYawToBox();
-                //logger.log("LAND");
-            } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
+            } else if (zeroKey.isLookingAtBox() && !isWaitingForCallback) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
                 logger.log("is looking at box");
                 updateFlightControlData(new float[]{0,0,0});
-
+                isWaitingForCallback = true;
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
                     public void onQRCodeScanResult(String result) {
+
                         if (result != null) {
                             logger.log("Qrcode result: " + result);
                         } else {
@@ -367,9 +369,10 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                     }
                                 });
                             }
-                            getHandler().removeCallbacks(updateValuesRunnable);
-                        }
 
+                            stopHandler=true;
+                        }
+                        isWaitingForCallback = false;
                     }
                 });
             }

@@ -53,7 +53,7 @@ public class WebserverRequestHandler {
             client = new MqttAndroidClient(context, BROKER, CLIENT_ID);
             connect();
             scheduler = Executors.newScheduledThreadPool(1);
-            scheduler.scheduleWithFixedDelay(this::processLatestMessage, 0, 100, TimeUnit.MILLISECONDS);
+            scheduler.scheduleWithFixedDelay(this::processLatestMessage, 0, 200, TimeUnit.MILLISECONDS);
             logger.log("End of MQTT flow");
         }
         catch(Exception e) {
