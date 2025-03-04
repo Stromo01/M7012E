@@ -77,7 +77,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     private float throttle;
     private boolean isSimulatorActived = false;
     private FlightController flightController = null;
-
+    private Runnable updateValuesRunnable;
     private FlightControllerState flightcontrollerState = null;
     private Simulator simulator = null;
 
@@ -334,33 +334,16 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
 
     private void handleWaypointNavigation() {
         try {
-            boolean temp =true;
             if (!zeroKey.haveArrived()) { // Not at waypoint, go to waypoint
                 float[] values = zeroKey.goToWaypoint();
                 updateFlightControlData(values);
-            } else if (!zeroKey.isLookingAtBox()&& temp) { // At waypoint, but not looking at box, yaw to box
-                //handleYawToBox();
-                temp=false;
-                updateFlightControlData(new float[]{0,0,0});
-                logger.log("LAND");
-                flightController.startLanding(new CommonCallbacks.CompletionCallback() {
-                    @Override
-                    public void onResult(DJIError djiError) {
-                        DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                    }
-                });
-                if(flightcontrollerState.isLandingConfirmationNeeded()){
-                    flightController.confirmLanding(new CommonCallbacks.CompletionCallback() {
-                        @Override
-                        public void onResult(DJIError djiError) {
-                            DialogUtils.showDialogBasedOnError(getContext(), djiError);
-                        }
-                    });
-                }
+            } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
+                handleYawToBox();
+                //logger.log("LAND");
             } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
                 logger.log("is looking at box");
                 updateFlightControlData(new float[]{0,0,0});
-                CameraScanner cameraScanner = new CameraScanner(getContext());
+
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
                     public void onQRCodeScanResult(String result) {
@@ -384,6 +367,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                     }
                                 });
                             }
+                            getHandler().removeCallbacks(updateValuesRunnable);
                         }
 
                     }

@@ -8,6 +8,8 @@ public class Waypoints {
     private float x_r;
     private float y_r;
     private float z_r;
+
+    private float angle;
     private int id;
 
     private float[] waypoint_pos = new float[3];  // Initialize array
@@ -16,7 +18,7 @@ public class Waypoints {
     public Waypoints() {}
 
     // Parameterized Constructor
-    public Waypoints(float x, float y, float z, float w_r, float x_r, float y_r, float z_r, int id) {
+    public Waypoints(float x, float y, float z, float w_r, float x_r, float y_r, float z_r, float angle,int id) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -24,6 +26,7 @@ public class Waypoints {
         this.x_r = x_r;
         this.y_r = y_r;
         this.z_r = z_r;
+        this.angle=angle;
         this.id = id;
 
 
@@ -73,7 +76,7 @@ public class Waypoints {
         return waypoint_pos;
     }
 
-    public float[] getnextAngle(){
+    public float getnextAngle(){
         float w_r = getW_r();
         float x_r =  getX_r();
         float y_r = getY_r();
@@ -82,7 +85,7 @@ public class Waypoints {
         waypoint_angle[1] = x_r;
         waypoint_angle[2] = y_r;
         waypoint_angle[3] = z_r;
-        return waypoint_angle;
+        return angle;
     }
 
 

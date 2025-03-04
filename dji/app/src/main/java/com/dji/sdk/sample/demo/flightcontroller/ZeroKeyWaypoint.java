@@ -36,7 +36,7 @@ public class ZeroKeyWaypoint {
     private float current_angle; // Save this as well
     private float[] waypoint_pos;
 
-    private float[] waypoint_angle;
+    private float waypoint_angle;
     private FlightController flightController;
     private Context context;
 
@@ -85,7 +85,7 @@ public class ZeroKeyWaypoint {
 
     public float[] goToWaypoint(){
         try {
-            current_angle = -45+flightController.getCompass().getHeading();//calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
+            current_angle = -50+flightController.getCompass().getHeading();//calculateYawFromQuaternion(MqttDataStore.getInstance().getAngle());
             current_angle = ((current_angle + 180) % 360 + 360) % 360 - 180;
 
             current_pos = MqttDataStore.getInstance().getPosition();
@@ -140,7 +140,7 @@ public class ZeroKeyWaypoint {
             waypoints.remove(0);
             isLookingAtWaypoint = false;
             logger.log("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
-            logger.log("Next angle: " + waypoint_angle[0] + ", " + waypoint_angle[1] + ", " + waypoint_angle[2] + ", "+ waypoint_angle[3]);
+            //logger.log("Next angle: " + waypoint_angle[0] + ", " + waypoint_angle[1] + ", " + waypoint_angle[2] + ", "+ waypoint_angle[3]);
             ToastUtils.setResultToToast("Next waypoint: " + waypoint_pos[0] + ", " + waypoint_pos[1] + ", " + waypoint_pos[2]);
             return true;
         }
@@ -203,15 +203,22 @@ public class ZeroKeyWaypoint {
     }
 
     public float yawToBox(){
-        float angleToBox = 3f;//calculateYawFromQuaternion(zeroKey.getWaypointAngle());//TODO: Implement this
+        float angleToBox = waypoint_angle; //TODO: Implement this
         isLookingAtBox=false;
+        logger.log("yawtobox" + angleToBox + " cur"+ current_angle);
         if (current_angle==angleToBox){//If already at angle
             logger.log("Yaw to box: Already at angle");
             isLookingAtBox=true;
             return 0f;
         }
         else{//Yaw to waypoint//TODO: Check if this is correct
-            if (angleToBox > current_angle) {
+            double angleDifference = angleToBox - current_angle;
+
+            // Normalize angle difference to (-180, 180] range
+            angleDifference = ((angleDifference + 180) % 360 + 360) % 360 - 180;
+
+            // Determine yaw direction
+            if (angleDifference > 0) {
                 return yawVelocity; // Yaw right
             } else {
                 return -yawVelocity; // Yaw left
