@@ -69,7 +69,7 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
     private boolean isWaitingForCallback = false;
     private TextView textView;
 
-
+    private Handler handler;
     private Timer sendVirtualStickDataTimer;
     private SendVirtualStickDataTask sendVirtualStickDataTask;
 
@@ -317,23 +317,37 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             sendVirtualStickDataTimer = new Timer();
         }
         try {
-            Handler handler = new Handler(Looper.getMainLooper());
-            Runnable updateValuesRunnable = new Runnable() {
-                @Override
-                public void run() { // Run method that runs in a loop until all waypoints are visited
-                    handleWaypointNavigation();
-                    if(!stopHandler){
-                        handler.postDelayed(this,100);
-                    }
-                }
-            };
-            handler.post(updateValuesRunnable);
+            startHandler();
         } catch (Exception e) {
             ToastUtils.setResultToToast("Error in takeoff: " + e.getMessage());
             logger.log("Error in takeoff: " + e.getMessage());
         }
     }
+    private void startHandler() {
+        if (handler == null) {
+            handler = new Handler(Looper.getMainLooper());
+        }
+        if (updateValuesRunnable == null) {
+            updateValuesRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    handleWaypointNavigation();
+                    if (!stopHandler) {
+                        handler.postDelayed(this, 100);
+                    }
+                }
+            };
+        }
+        handler.post(updateValuesRunnable);
+        logger.log("handler started");
+    }
 
+    private void stopHandler() {
+        if (handler != null && updateValuesRunnable != null) {
+            handler.removeCallbacks(updateValuesRunnable);
+            logger.log("handler stopped");
+        }
+    }
     private void handleWaypointNavigation() {
         try {
             if (!zeroKey.haveArrived()) { // Not at waypoint, go to waypoint
@@ -341,14 +355,13 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                 updateFlightControlData(values);
             } else if (!zeroKey.isLookingAtBox()) { // At waypoint, but not looking at box, yaw to box
                 handleYawToBox();
-            } else if (zeroKey.isLookingAtBox() && !isWaitingForCallback) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
+            } else if (zeroKey.isLookingAtBox()) { // At waypoint and looking at box, take picture and scan QR code, go to next waypoint
                 logger.log("is looking at box");
                 updateFlightControlData(new float[]{0,0,0});
-                isWaitingForCallback = true;
+                stopHandler();
                 cameraScanner.scanQRCode(new CameraScanner.QRCodeScanCallback() {
                     @Override
                     public void onQRCodeScanResult(String result) {
-
                         if (result != null) {
                             logger.log("Qrcode result: " + result);
                         } else {
@@ -370,9 +383,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
                                 });
                             }
 
-                            stopHandler=true;
                         }
-                        isWaitingForCallback = false;
+                        startHandler();
                     }
                 });
             }
@@ -394,7 +406,8 @@ public class VirtualStickView extends RelativeLayout implements CameraScanner.QR
             roll = values[0];
             throttle = values[1];
             yaw = values[2];
-            ToastUtils.setResultToToast("Roll: " + roll + " Throttle: " + throttle + " Yaw: " + yaw);
+            //ToastUtils.setResultToToast("Roll: " + roll + " Throttle: " + throttle + " Yaw: " + yaw);
+            logger.log("Roll: " + roll + " Throttle: " + throttle + " Yaw: " + yaw);
             if (sendVirtualStickDataTimer != null && sendVirtualStickDataTask != null) {
                 try {
                     sendVirtualStickDataTask.cancel();
