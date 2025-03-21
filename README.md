@@ -1,1 +1,2 @@
 # M7012E - Warehouse inventory automation
+This is the code for running an application to make a drone take inventory in a warehouse. To run the code, download it, open the app folder in Android Studio. Build the code on an android 14+. When the code is built on the phone, plug the phone in to the controller and you should be good to go.
